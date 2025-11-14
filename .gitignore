@@ -1,0 +1,63 @@
+# Konfigurationsdateien mit sensiblen Daten
+config/config.php
+
+# Datenbankdateien
+*.db
+*.sqlite
+*.sqlite3
+
+# Externe Bibliotheken (werden beim Setup heruntergeladen)
+lib/dompdf/
+lib/phpqrcode/
+
+# PHP
+*.log
+*.cache
+composer.phar
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Temporäre Dateien
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Cache-Verzeichnisse
+cache/
+tmp/
+temp/
+
+# Umgebungsvariablen
+.env
+.env.local
+
+# OS-spezifische Dateien
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Log-Dateien
+*.log
+logs/
+
+# Backup-Dateien
+*.bak
+*.backup
+*.old
+
+# Konfigurations-Templates (config.php.example sollte committed werden)
+# config/config.php.example
+

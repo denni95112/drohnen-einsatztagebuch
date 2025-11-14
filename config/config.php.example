@@ -1,0 +1,18 @@
+<?php
+return [
+    'token_name' => 'dg_ORT_tagebuch_token',
+    'navigation_title' => 'Drohnengruppe ORT',
+    'encryption' => [
+        'method' => 'aes-256-cbc',
+        'iv' => 'GENERATE_NEW_IV',
+    ],
+    'password_hash' => 'GENERATE_HASH_FROM_PASSWORD',
+    'admin_password_hash' => 'GENERATE_HASH_FROM_ADMIN_PASSWORD',
+    'read_token' => 'GENERATE_READ_TOKEN',
+    'domain' => 'your-domain.com',
+    'database_path' => 'einsatzbuch.db',
+    // Optional:
+    // 'path_to_dashboard_db' => 'path/to/dashboard.db',
+    // 'dashboard_url' => 'https://your-dashboard-url.com',
+];
+

@@ -1,0 +1,175 @@
+/* General Reset & Base Styles */
+body {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: auto;
+    background: #f4f7f9;
+    padding: 20px;
+    box-sizing: border-box;
+    color: #333;
+}
+
+h1, h2 {
+    margin-bottom: 20px;
+}
+
+/* Form & Container Styles */
+form, .container, .quick-action, .success-message, .panel {
+    background: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+/* Inputs & Buttons */
+label, input, textarea, select, button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+    transform: scale(1.5);
+    width: auto;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+/* Button Styles */
+button, .btn, a.back-btn, a.action-btn, a.download-btn, .abschluss-link {
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    color: white;
+    width: 100%;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    border: none;
+    padding: 10px;
+    display: inline-block;
+}
+
+button, .btn, a.back-btn {
+    background: #007BFF;
+}
+
+button:hover, .btn:hover, a.back-btn:hover {
+    background: #0056b3;
+}
+
+.btn-dashboard, .gps-btn, .abschluss-link, .btn-back, .download-btn {
+    background-color: #28a745;
+}
+
+.btn-dashboard:hover, .gps-btn:hover, .abschluss-link:hover, .btn-back:hover, .download-btn:hover {
+    background-color: #218838;
+}
+
+.danger, .btn-delete, .delete-btn {
+    background: #dc3545;
+}
+
+.danger:hover, .btn-delete:hover, .delete-btn:hover {
+    background: #c82333;
+}
+
+a.action-btn {
+    background-color: #17a2b8;
+}
+
+a.action-btn:hover {
+    opacity: 0.8;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: white;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+}
+
+th {
+    background-color: #e0e7ef;
+    cursor: pointer;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* Quick Action Component */
+.quick-action {
+    max-width: 430px;
+    min-width: 330px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.quick-action img {
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+}
+
+.quick-action strong {
+    font-size: 17px;
+    margin-bottom: 10px;
+}
+
+/* Accordion Styles */
+.accordion {
+    background: #8000ff;
+    color: #fff;
+    padding: 15px;
+    cursor: pointer;
+    border: none;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.panel {
+    display: none;
+    padding: 0 15px;
+    border: 1px solid #ccc;
+}
+
+/* QR Container */
+.qr-container {
+    text-align: center;
+}
+
+.qr-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .btn, button, input, textarea, select {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+}

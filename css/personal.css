@@ -1,0 +1,15 @@
+a.action-btn {
+    text-decoration: none;
+    color: white;
+    background-color: #17a2b8;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-right: 5px;
+    width: 42%;
+}
+
+a.delete-btn {
+    background-color: #dc3545;
+}
+

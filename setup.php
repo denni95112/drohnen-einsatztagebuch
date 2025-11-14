@@ -1,0 +1,637 @@
+<?php
+// Define functions needed for library downloads (must be before any output)
+function checkLibraries() {
+        $libs = [
+            'dompdf' => [
+                'path' => __DIR__ . '/lib/dompdf/autoload.inc.php',
+                'name' => 'dompdf',
+                'url' => 'https://github.com/dompdf/dompdf/releases/download/v3.1.4/dompdf-3.1.4.zip',
+                'github_api' => 'null'
+            ],
+            'phpqrcode' => [
+                'path' => __DIR__ . '/lib/phpqrcode/qrlib.php',
+                'name' => 'phpqrcode',
+                'url' => 'https://github.com/t0k4rt/phpqrcode/archive/refs/heads/master.zip',
+                'github_api' => null
+            ]
+        ];
+        
+        $missing = [];
+        foreach ($libs as $key => $lib) {
+            if (!file_exists($lib['path'])) {
+                $missing[$key] = $lib;
+            }
+        }
+        
+        return $missing;
+    }
+    
+    function downloadLibrary($libInfo, $libDir) {
+        // Create lib directory if it doesn't exist
+        if (!is_dir($libDir)) {
+            if (!mkdir($libDir, 0755, true)) {
+                return ['success' => false, 'error' => "Konnte Verzeichnis $libDir nicht erstellen"];
+            }
+        }
+        
+        // Check if curl is available
+        if (!function_exists('curl_init')) {
+            return ['success' => false, 'error' => 'cURL ist nicht verfügbar. Bitte installiere die PHP cURL Extension.'];
+        }
+        
+        // Create temporary file for download
+        $tempFile = tempnam(sys_get_temp_dir(), 'lib_download_');
+        $fp = fopen($tempFile, 'w');
+        
+        if (!$fp) {
+            return ['success' => false, 'error' => "Konnte temporäre Datei nicht erstellen"];
+        }
+        
+        // Download the file
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $libInfo['url']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'PHP Library Downloader');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300); // 5 minute timeout
+        
+        // SSL certificate handling
+        // Try to use system certificate store first
+        $caBundlePaths = [
+            __DIR__ . '/cacert.pem', // Local certificate bundle
+            ini_get('curl.cainfo'), // PHP ini setting
+            ini_get('openssl.cafile'), // OpenSSL CA file
+        ];
+        
+        $caBundleFound = false;
+        foreach ($caBundlePaths as $caPath) {
+            if ($caPath && file_exists($caPath)) {
+                curl_setopt($ch, CURLOPT_CAINFO, $caPath);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                $caBundleFound = true;
+                break;
+            }
+        }
+        
+        // If no certificate bundle found, disable SSL verification for local development
+        // This is acceptable for a setup script downloading from GitHub
+        if (!$caBundleFound) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $success = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        fclose($fp);
+        
+        if (!$success || $httpCode !== 200) {
+            @unlink($tempFile);
+            return ['success' => false, 'error' => "Download fehlgeschlagen: " . ($error ?: "HTTP $httpCode")];
+        }
+        
+        // Check if file was actually downloaded
+        if (!file_exists($tempFile) || filesize($tempFile) === 0) {
+            @unlink($tempFile);
+            return ['success' => false, 'error' => "Download-Datei ist leer oder fehlt"];
+        }
+        
+        // Check if ZipArchive is available
+        if (!class_exists('ZipArchive')) {
+            @unlink($tempFile);
+            return ['success' => false, 'error' => 'ZipArchive ist nicht verfügbar. Bitte installiere die PHP Zip Extension.'];
+        }
+        
+        // Extract the zip file
+        $zip = new ZipArchive();
+        if ($zip->open($tempFile) !== TRUE) {
+            @unlink($tempFile);
+            return ['success' => false, 'error' => 'Konnte ZIP-Datei nicht öffnen'];
+        }
+        
+        $extractPath = $libDir . '/' . $libInfo['name'] . '_temp';
+        if (is_dir($extractPath)) {
+            // Remove existing temp directory
+            rmdir_recursive($extractPath);
+        }
+        mkdir($extractPath, 0755, true);
+        
+        $zip->extractTo($extractPath);
+        $zip->close();
+        @unlink($tempFile);
+        
+        // Find the actual library directory in the extracted files
+        $files = scandir($extractPath);
+        $actualLibPath = null;
+        
+        // First check if files are directly in extract path
+        if ($libInfo['name'] === 'dompdf' && (file_exists($extractPath . '/autoload.inc.php') || file_exists($extractPath . '/vendor/autoload.php'))) {
+            $actualLibPath = $extractPath;
+        } elseif ($libInfo['name'] === 'phpqrcode' && file_exists($extractPath . '/qrlib.php')) {
+            $actualLibPath = $extractPath;
+        } else {
+            // Search recursively
+            $actualLibPath = findLibraryPath($extractPath, $libInfo['name']);
+            
+            // If still not found, check common extraction patterns
+            if (!$actualLibPath) {
+                foreach ($files as $file) {
+                    if ($file === '.' || $file === '..') continue;
+                    $fullPath = $extractPath . '/' . $file;
+                    if (is_dir($fullPath) && (strpos($file, $libInfo['name']) !== false || strpos($file, 'dompdf') !== false || strpos($file, 'phpqrcode') !== false)) {
+                        $actualLibPath = findLibraryPath($fullPath, $libInfo['name']);
+                        if ($actualLibPath) break;
+                    }
+                }
+            }
+        }
+        
+        if (!$actualLibPath) {
+            rmdir_recursive($extractPath);
+            return ['success' => false, 'error' => 'Bibliotheksverzeichnis in ZIP nicht gefunden'];
+        }
+        
+        // Move to final location
+        $finalPath = $libDir . '/' . $libInfo['name'];
+        if (is_dir($finalPath)) {
+            rmdir_recursive($finalPath);
+        }
+        
+        if (!rename($actualLibPath, $finalPath)) {
+            rmdir_recursive($extractPath);
+            return ['success' => false, 'error' => 'Konnte Bibliothek nicht nach ' . $finalPath . ' verschieben'];
+        }
+        
+        // Clean up any remaining temp files
+        if (is_dir($extractPath)) {
+            rmdir_recursive($extractPath);
+        }
+        
+        return ['success' => true];
+    }
+    
+    function rmdir_recursive($dir) {
+        if (!is_dir($dir)) return;
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . '/' . $file;
+            is_dir($path) ? rmdir_recursive($path) : unlink($path);
+        }
+        rmdir($dir);
+    }
+    
+    function findLibraryPath($dir, $libName) {
+        if (!is_dir($dir)) return null;
+        
+        $files = scandir($dir);
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') continue;
+            $fullPath = $dir . '/' . $file;
+            
+            if ($libName === 'dompdf') {
+                // Check for dompdf autoload files
+                if (file_exists($fullPath . '/autoload.inc.php')) {
+                    return $fullPath;
+                }
+                if (file_exists($fullPath . '/vendor/autoload.php')) {
+                    return $fullPath;
+                }
+                if (is_dir($fullPath)) {
+                    $found = findLibraryPath($fullPath, $libName);
+                    if ($found) return $found;
+                }
+            } elseif ($libName === 'phpqrcode') {
+                // Check for phpqrcode main file
+                if (file_exists($fullPath . '/qrlib.php')) {
+                    return $fullPath;
+                }
+                if (is_dir($fullPath)) {
+                    $found = findLibraryPath($fullPath, $libName);
+                    if ($found) return $found;
+                }
+            }
+        }
+        return null;
+}
+
+// Handle library downloads FIRST - before any other output or checks
+// This MUST be the very first thing that runs after function definitions
+// Check if this is an AJAX request (check both POST and header)
+$isAjaxRequest = ($_SERVER['REQUEST_METHOD'] === 'POST' && 
+                 (!empty($_POST['ajax']) || 
+                  (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')));
+$isDownloadRequest = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['download_libs']));
+
+// If it's an AJAX request for downloads, handle it immediately
+if ($isAjaxRequest && $isDownloadRequest) {
+    // For AJAX requests, set JSON headers IMMEDIATELY - before anything else
+    // Clear any existing output buffers
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    // Set headers immediately to prevent any HTML output
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8', true);
+        header('Cache-Control: no-cache, must-revalidate', true);
+        header('X-Content-Type-Options: nosniff', true);
+        // Prevent any redirects
+        header_remove('Location');
+    }
+    // Start output buffering
+    ob_start();
+    
+    // Suppress any warnings/errors from being displayed
+    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    
+    // Set error handler to catch fatal errors
+    register_shutdown_function(function() {
+        $error = error_get_last();
+        if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+            if (!empty($_POST['ajax'])) {
+                while (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'results' => [],
+                    'remaining' => [],
+                    'error' => 'Fatal error: ' . $error['message'] . ' in ' . $error['file'] . ' on line ' . $error['line']
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
+    });
+    
+    try {
+        $missingLibs = checkLibraries();
+        $libDir = __DIR__ . '/lib';
+        $results = [];
+        
+        foreach ($missingLibs as $key => $lib) {
+            if (isset($_POST['lib_' . $key]) && $_POST['lib_' . $key] === '1') {
+                $result = downloadLibrary($lib, $libDir);
+                $results[$key] = $result;
+            }
+        }
+        
+        // Get any output that might have been generated (errors, warnings)
+        $output = ob_get_clean();
+        
+        // Since we're in the AJAX handler, always return JSON
+        // Make absolutely sure no output was sent before headers
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
+        // Clear any previous headers
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-cache, must-revalidate');
+            header('X-Content-Type-Options: nosniff');
+        }
+        
+        $response = [
+            'results' => $results,
+            'remaining' => checkLibraries()
+        ];
+        
+        // Add output to response if there was any (for debugging)
+        if (!empty($output) && trim($output) !== '') {
+            $response['debug_output'] = substr($output, 0, 500); // Limit debug output
+        }
+        
+        $json = json_encode($response, JSON_UNESCAPED_UNICODE);
+        if ($json === false) {
+            $json = json_encode([
+                'results' => [],
+                'remaining' => [],
+                'error' => 'JSON encoding failed: ' . json_last_error_msg(),
+                'debug_output' => substr($output, 0, 500)
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        
+        echo $json;
+        exit;
+    } catch (Throwable $e) {
+        $output = ob_get_clean();
+        
+        // Always return JSON for AJAX requests
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-cache, must-revalidate');
+            header('X-Content-Type-Options: nosniff');
+        }
+        
+        $response = [
+            'results' => [],
+            'remaining' => [],
+            'error' => 'Ein Fehler ist aufgetreten: ' . $e->getMessage(),
+            'error_type' => get_class($e),
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine()
+        ];
+        
+        if (!empty($output)) {
+            $response['debug_output'] = substr($output, 0, 500);
+        }
+        
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Handle non-AJAX download requests (regular form submission)
+if ($isDownloadRequest && !$isAjaxRequest) {
+    // Start output buffering
+    if (ob_get_level() == 0) {
+        ob_start();
+    } else {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        ob_start();
+    }
+    
+    try {
+        $missingLibs = checkLibraries();
+        $libDir = __DIR__ . '/lib';
+        $results = [];
+        
+        foreach ($missingLibs as $key => $lib) {
+            if (isset($_POST['lib_' . $key]) && $_POST['lib_' . $key] === '1') {
+                $result = downloadLibrary($lib, $libDir);
+                $results[$key] = $result;
+            }
+        }
+        
+        // Redirect to refresh page
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        if (!headers_sent()) {
+            header("Location: setup.php");
+        }
+        exit;
+    } catch (Throwable $e) {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        if (!headers_sent()) {
+            header("Location: setup.php?error=" . urlencode($e->getMessage()));
+        }
+        exit;
+    }
+}
+
+$configPath = __DIR__ . '/config/config.php';
+
+// Don't redirect if this is an AJAX request for library downloads
+// Also check if headers were already sent (meaning we're in the download handler)
+if (file_exists($configPath) && !isset($_POST['download_libs']) && !headers_sent()) {
+    header("Location: login.php");
+    exit;
+}
+
+// Detect OS
+$isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+// Generate suggested database paths based on OS
+$suggestedPaths = [];
+
+if ($isWindows) {
+    // Windows paths
+    $suggestedPaths = [
+        'C:/data/einsatzbuch.db' => 'C:/data/einsatzbuch.db - Empfohlen',
+        'einsatzbuch.db' => '(einsatzbuch.db) - Weniger sicher',
+        'D:/apps/einsatzbuch.db' => 'D:/apps/einsatzbuch.db',
+        '../data/einsatzbuch.db' => '../data/einsatzbuch.db - Relativ',
+        'C:/ProgramData/einsatzbuch.db' => 'C:/ProgramData/einsatzbuch.db',
+    ];
+} else {
+    // Linux/Unix paths
+    $user = get_current_user();
+    $suggestedPaths = [
+        '/var/data/einsatzbuch.db' => '/var/data/einsatzbuch.db - Empfohlen',
+        'einsatzbuch.db' => '(einsatzbuch.db) - Weniger sicher',
+        '/home/' . $user . '/data/einsatzbuch.db' => '/home/' . $user . '/data/einsatzbuch.db',
+        '../data/einsatzbuch.db' => '../data/einsatzbuch.db - Relativ',
+        '/opt/data/einsatzbuch.db' => '/opt/data/einsatzbuch.db',
+    ];
+}
+
+function generateToken($length = 16) {
+    return bin2hex(random_bytes($length / 2));
+}
+
+function generateIV($length = 16) {
+    return bin2hex(random_bytes($length));
+}
+
+// Formular wurde abgeschickt
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
+    $tokenName = 'dg_' . preg_replace('/[^a-z0-9]/i', '', $_POST['ort']) . '_tagebuch_token';
+    $navigationTitle = trim($_POST['einheit']) . ' ' . trim($_POST['ort']);
+    $iv = substr(generateIV(), 0, 16); // 16 Bytes
+    $passwordHash = hash('sha256', $_POST['passwort']);
+    $adminPasswordHash = hash('sha256', $_POST['admin_passwort']);
+    $readToken = generateToken(16);
+    $domain = $_SERVER['HTTP_HOST'];
+
+    // Handle database path: use custom path if provided, otherwise use dropdown selection
+    $database_path_dropdown = $_POST['database_path_dropdown'] ?? '';
+    $database_path_custom = trim($_POST['database_path_custom'] ?? '');
+    
+    if ($database_path_dropdown === 'custom' && !empty($database_path_custom)) {
+        $database_path = $database_path_custom;
+    } elseif ($database_path_dropdown === 'custom' && empty($database_path_custom)) {
+        $database_path = 'einsatzbuch.db'; // Default if custom is selected but empty
+    } elseif (!empty($database_path_dropdown)) {
+        $database_path = $database_path_dropdown;
+    } else {
+        $database_path = 'einsatzbuch.db'; // Default
+    }
+    
+    $database_path = trim($database_path);
+    // Normalize path separators
+    $database_path = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $database_path);
+    $database_path_escaped = addslashes($database_path);
+
+    // Handle dashboard database path (optional)
+    $path_to_dashboard_db = trim($_POST['path_to_dashboard_db'] ?? '');
+    if (!empty($path_to_dashboard_db)) {
+        // Normalize path separators
+        $path_to_dashboard_db = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path_to_dashboard_db);
+        $path_to_dashboard_db_escaped = addslashes($path_to_dashboard_db);
+    }
+
+    // Handle dashboard URL (optional)
+    $dashboard_url = trim($_POST['dashboard_url'] ?? '');
+    if (!empty($dashboard_url)) {
+        // Ensure URL is properly formatted
+        $dashboard_url = rtrim($dashboard_url, '/');
+        $dashboard_url_escaped = addslashes($dashboard_url);
+    }
+
+    $config = "<?php\nreturn [\n" .
+        "    'token_name' => '" . addslashes($tokenName) . "',\n" .
+        "    'navigation_title' => '" . addslashes($navigationTitle) . "',\n" .
+        "    'encryption' => [\n" .
+        "        'method' => 'aes-256-cbc',\n" .
+        "        'iv' => '" . addslashes($iv) . "',\n" .
+        "    ],\n" .
+        "    'password_hash' => '" . $passwordHash . "',\n" .
+        "    'admin_password_hash' => '" . $adminPasswordHash . "',\n" .
+        "    'read_token' => '" . $readToken . "',\n" .
+        "    'domain' => '" . addslashes($domain) . "',\n" .
+        "    'database_path' => '" . $database_path_escaped . "',\n";
+    
+    // Add dashboard database path only if provided
+    if (!empty($path_to_dashboard_db)) {
+        $config .= "    'path_to_dashboard_db' => '" . $path_to_dashboard_db_escaped . "',\n";
+    }
+    
+    // Add dashboard URL only if provided
+    if (!empty($dashboard_url)) {
+        $config .= "    'dashboard_url' => '" . $dashboard_url_escaped . "',\n";
+    }
+    
+    $config .= "];\n";
+
+    if (!is_dir(__DIR__ . '/config')) {
+        mkdir(__DIR__ . '/config', 0755, true);
+    }
+
+    file_put_contents($configPath, $config);
+
+    // DB initialisieren
+    require_once 'db.php';
+
+    header("Location: login.php");
+    exit;
+}
+
+// Check for missing libraries
+$missingLibraries = checkLibraries();
+?>
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Setup Einsatztagebuch</title>
+    <link rel="stylesheet" href="css/setup.css">
+    <script src="js/setup.js"></script>
+</head>
+<body>
+    <h2>Erstkonfiguration Einsatztagebuch</h2>
+
+    <?php if (!empty($missingLibraries)): ?>
+    <div class="library-section">
+        <h3>Benötigte Bibliotheken</h3>
+        <p>Die folgenden Bibliotheken fehlen und müssen heruntergeladen werden:</p>
+        <form method="post" id="libDownloadForm">
+            <?php foreach ($missingLibraries as $key => $lib): ?>
+            <label>
+                <input type="checkbox" name="lib_<?= $key ?>" value="1" checked>
+                <strong><?= htmlspecialchars($lib['name']) ?></strong>
+                <span>(<?= htmlspecialchars(basename($lib['path'])) ?>)</span>
+            </label>
+            <?php endforeach; ?>
+            <button type="submit" name="download_libs" id="downloadLibsBtn">
+                Bibliotheken herunterladen
+            </button>
+            <div id="downloadStatus"></div>
+        </form>
+    </div>
+    <?php endif; ?>
+
+    <form method="post" id="configForm">
+        <label>Einheit (z. B. Feuerwehr, Drohnengruppe, etc.):<br>
+            <input type="text" name="einheit" required>
+        </label>
+        <br><br>
+        <label>Ort:<br>
+            <input type="text" name="ort" required>
+        </label>
+        <br><br>
+        <label>Passwort für Login:<br>
+            <input type="password" name="passwort" required>
+        </label>
+        <br><br>
+        <label>Passwort für Admin Login:<br>
+            <input type="password" name="admin_passwort" required>
+        </label>
+        <br><br>
+        <label>
+            Datenbank-Pfad
+            <span class="tooltip">?
+                <span class="tooltiptext">
+                    <strong>Sicherheitshinweis:</strong> Speichere die Datenbank außerhalb des Web-Verzeichnisses!<br><br>
+                    <strong>Beispiele:</strong><br>
+                    <?php if ($isWindows): ?>
+                    Windows: C:/data/einsatzbuch.db oder ..\\data\\einsatzbuch.db<br>
+                    <?php else: ?>
+                    Linux: /var/data/einsatzbuch.db oder ../data/einsatzbuch.db<br>
+                    <?php endif; ?>
+                    Relativ: einsatzbuch.db (Standard, weniger sicher)<br><br>
+                    Wähle einen empfohlenen Pfad oder verwende "Eigener Pfad" für eine benutzerdefinierte Option.
+                </span>
+            </span>
+        </label>
+        <select name="database_path_dropdown" id="database_path_dropdown" required>
+            <?php foreach ($suggestedPaths as $path => $label): 
+                $pathEscaped = htmlspecialchars($path);
+                $labelEscaped = htmlspecialchars($label); ?>
+                <option value="<?= $pathEscaped ?>"><?= $labelEscaped ?></option>
+            <?php endforeach; ?>
+            <option value="custom">Eigener Pfad...</option>
+        </select>
+        <input type="text" name="database_path_custom" id="database_path_custom" placeholder="Eigener Pfad eingeben...">
+        <small>
+            <?php if ($isWindows): ?>
+                Betriebssystem erkannt: Windows
+            <?php else: ?>
+                Betriebssystem erkannt: Linux/Unix
+            <?php endif; ?>
+        </small>
+        <br><br>
+        <label>
+            Pfad zur Flug Dashboard Datenbank (optional)
+            <span class="tooltip">?
+                <span class="tooltiptext">
+                    Wenn du auch das Flug Dashboard verwendest, kann das Einsatztagebuch die Flüge automatisch einfügen. Dafür wird der Pfad zur Datenbank des Flugdashboards benötigt.
+                </span>
+            </span>
+        </label>
+        <input type="text" name="path_to_dashboard_db" placeholder="z.B. C:/data/dashboard-database.sqlite oder leer lassen">
+        <br><br>
+        <label>
+            Flug Dashboard URL (optional)
+            <span class="tooltip">?
+                <span class="tooltiptext">
+                    Die URL zum Flug Dashboard, falls du es verwendest. Wird für Verlinkungen und Integration verwendet.
+                </span>
+            </span>
+        </label>
+        <input type="url" name="dashboard_url" placeholder="z.B. https://example.com/dashboard oder leer lassen">
+        <br><br>
+
+        <button type="submit" name="submit_config" id="submitConfigBtn" <?= !empty($missingLibraries) ? 'disabled' : '' ?>>
+            Konfiguration abschließen
+        </button>
+        <?php if (!empty($missingLibraries)): ?>
+        <small class="error-message">
+            Bitte lade zuerst die fehlenden Bibliotheken herunter.
+        </small>
+        <?php endif; ?>
+    </form>
+</body>
+</html>
