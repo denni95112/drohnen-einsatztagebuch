@@ -155,6 +155,24 @@ a.action-btn:hover {
     box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
 }
 
+/* ===== Back Button ===== */
+a.back-btn {
+    display: block;
+    width: auto;
+    max-width: 300px;
+    margin: 2rem auto 0 auto;
+    text-align: center;
+}
+
+/* ===== PDF Download Button ===== */
+a.abschluss-link {
+    display: block;
+    width: auto;
+    max-width: 400px;
+    margin: 2rem auto 0 auto;
+    text-align: center;
+}
+
 /* ===== Forms ===== */
 form {
     display: flex;
