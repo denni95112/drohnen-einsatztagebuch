@@ -26,6 +26,53 @@ function checkLibraries() {
         return $missing;
     }
     
+    function getManualInstallInstructions($libInfo) {
+        $libDir = __DIR__ . '/lib';
+        $instructions = [];
+        
+        if ($libInfo['name'] === 'dompdf') {
+            $instructions = [
+                'title' => 'dompdf manuell installieren',
+                'steps' => [
+                    '1. Erstelle das Verzeichnis: mkdir -p ' . $libDir . '/dompdf',
+                    '2. Lade dompdf herunter:',
+                    '   wget https://github.com/dompdf/dompdf/releases/download/v3.1.4/dompdf-3.1.4.zip',
+                    '   ODER: curl -L -o dompdf.zip https://github.com/dompdf/dompdf/releases/download/v3.1.4/dompdf-3.1.4.zip',
+                    '3. Entpacke die ZIP-Datei:',
+                    '   unzip dompdf-3.1.4.zip -d ' . $libDir . '/dompdf_temp',
+                    '4. Finde das dompdf-Verzeichnis im entpackten Inhalt und verschiebe es:',
+                    '   mv ' . $libDir . '/dompdf_temp/dompdf-3.1.4/* ' . $libDir . '/dompdf/',
+                    '   ODER falls die Dateien direkt im ZIP sind:',
+                    '   mv ' . $libDir . '/dompdf_temp/* ' . $libDir . '/dompdf/',
+                    '5. Aufräumen:',
+                    '   rm -rf ' . $libDir . '/dompdf_temp dompdf-3.1.4.zip',
+                    '6. Überprüfe, dass die Datei existiert:',
+                    '   ls -la ' . $libDir . '/dompdf/autoload.inc.php'
+                ]
+            ];
+        } elseif ($libInfo['name'] === 'phpqrcode') {
+            $instructions = [
+                'title' => 'phpqrcode manuell installieren',
+                'steps' => [
+                    '1. Erstelle das Verzeichnis: mkdir -p ' . $libDir . '/phpqrcode',
+                    '2. Lade phpqrcode herunter:',
+                    '   wget https://github.com/t0k4rt/phpqrcode/archive/refs/heads/master.zip',
+                    '   ODER: curl -L -o phpqrcode.zip https://github.com/t0k4rt/phpqrcode/archive/refs/heads/master.zip',
+                    '3. Entpacke die ZIP-Datei:',
+                    '   unzip master.zip -d ' . $libDir . '/phpqrcode_temp',
+                    '4. Finde das phpqrcode-Verzeichnis im entpackten Inhalt und verschiebe es:',
+                    '   mv ' . $libDir . '/phpqrcode_temp/phpqrcode-master/* ' . $libDir . '/phpqrcode/',
+                    '5. Aufräumen:',
+                    '   rm -rf ' . $libDir . '/phpqrcode_temp master.zip',
+                    '6. Überprüfe, dass die Datei existiert:',
+                    '   ls -la ' . $libDir . '/phpqrcode/qrlib.php'
+                ]
+            ];
+        }
+        
+        return $instructions;
+    }
+    
     function downloadLibrary($libInfo, $libDir) {
         // Create lib directory if it doesn't exist
         if (!is_dir($libDir)) {
@@ -98,19 +145,7 @@ function checkLibraries() {
             return ['success' => false, 'error' => "Download-Datei ist leer oder fehlt"];
         }
         
-        // Check if ZipArchive is available
-        if (!class_exists('ZipArchive')) {
-            @unlink($tempFile);
-            return ['success' => false, 'error' => 'ZipArchive ist nicht verfügbar. Bitte installiere die PHP Zip Extension.'];
-        }
-        
         // Extract the zip file
-        $zip = new ZipArchive();
-        if ($zip->open($tempFile) !== TRUE) {
-            @unlink($tempFile);
-            return ['success' => false, 'error' => 'Konnte ZIP-Datei nicht öffnen'];
-        }
-        
         $extractPath = $libDir . '/' . $libInfo['name'] . '_temp';
         if (is_dir($extractPath)) {
             // Remove existing temp directory
@@ -118,9 +153,60 @@ function checkLibraries() {
         }
         mkdir($extractPath, 0755, true);
         
-        $zip->extractTo($extractPath);
-        $zip->close();
-        @unlink($tempFile);
+        // Try ZipArchive first, fallback to command-line unzip
+        if (class_exists('ZipArchive')) {
+            // Use ZipArchive
+            $zip = new ZipArchive();
+            if ($zip->open($tempFile) !== TRUE) {
+                @unlink($tempFile);
+                rmdir_recursive($extractPath);
+                return ['success' => false, 'error' => 'Konnte ZIP-Datei nicht öffnen'];
+            }
+            $zip->extractTo($extractPath);
+            $zip->close();
+            @unlink($tempFile);
+        } else {
+            // Fallback: Use command-line unzip if available
+            $unzipCommand = 'unzip';
+            $unzipPath = null;
+            
+            // Check if unzip command is available
+            $whichUnzip = shell_exec('which unzip 2>/dev/null');
+            if ($whichUnzip) {
+                $unzipPath = trim($whichUnzip);
+            } elseif (shell_exec('command -v unzip 2>/dev/null')) {
+                $unzipPath = 'unzip';
+            }
+            
+            if ($unzipPath) {
+                // Use command-line unzip
+                $tempFileEscaped = escapeshellarg($tempFile);
+                $extractPathEscaped = escapeshellarg($extractPath);
+                $command = "$unzipPath -q $tempFileEscaped -d $extractPathEscaped 2>&1";
+                $output = [];
+                $returnVar = 0;
+                exec($command, $output, $returnVar);
+                
+                @unlink($tempFile);
+                
+                if ($returnVar !== 0) {
+                    rmdir_recursive($extractPath);
+                    return ['success' => false, 'error' => 'ZIP-Extraktion fehlgeschlagen: ' . implode("\n", $output)];
+                }
+            } else {
+                // Neither ZipArchive nor unzip available
+                @unlink($tempFile);
+                rmdir_recursive($extractPath);
+                $manualInstructions = getManualInstallInstructions($libInfo);
+                return [
+                    'success' => false, 
+                    'error' => 'ZipArchive ist nicht verfügbar und unzip-Befehl wurde nicht gefunden. ' .
+                               'Bitte installiere entweder die PHP Zip Extension oder unzip. ' .
+                               'Alternativ kannst du die Bibliotheken manuell installieren.',
+                    'manual_instructions' => $manualInstructions
+                ];
+            }
+        }
         
         // Find the actual library directory in the extracted files
         $files = scandir($extractPath);

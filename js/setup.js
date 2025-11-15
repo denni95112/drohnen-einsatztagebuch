@@ -1,3 +1,9 @@
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('database_path_dropdown');
     const customInput = document.getElementById('database_path_custom');
@@ -75,6 +81,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             html += '<p style="color: #28a745; font-weight: 500;">✓ ' + lib + ' erfolgreich heruntergeladen</p>';
                         } else {
                             html += '<p style="color: #dc3545; font-weight: 500;">✗ ' + lib + ': ' + (result.error || 'Fehler') + '</p>';
+                            
+                            // Show manual installation instructions if available
+                            if (result.manual_instructions) {
+                                html += '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin: 10px 0;">';
+                                html += '<h4 style="margin-top: 0; color: #856404;">' + result.manual_instructions.title + ':</h4>';
+                                html += '<ol style="margin: 10px 0; padding-left: 20px;">';
+                                result.manual_instructions.steps.forEach(step => {
+                                    html += '<li style="margin: 5px 0; font-family: monospace; font-size: 13px; color: #856404;">' + escapeHtml(step) + '</li>';
+                                });
+                                html += '</ol>';
+                                html += '</div>';
+                            }
+                            
                             allSuccess = false;
                         }
                     }
