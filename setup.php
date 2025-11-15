@@ -612,6 +612,7 @@ $missingLibraries = checkLibraries();
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup Einsatztagebuch</title>
     <link rel="stylesheet" href="css/setup.css">
     <script src="js/setup.js"></script>

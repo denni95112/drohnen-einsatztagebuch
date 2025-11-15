@@ -88,6 +88,7 @@ $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personalverwaltung</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/personal.css">

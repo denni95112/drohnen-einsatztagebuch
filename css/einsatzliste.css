@@ -1,4 +1,25 @@
+/* Modern Einsatzliste Styles */
+
 .download-btn {
-    width: 80% !important;
+    width: auto !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.9rem !important;
+    white-space: nowrap;
 }
 
+/* Responsive */
+@media (max-width: 768px) {
+    .download-btn {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .download-btn {
+        width: 100% !important;
+        display: block;
+        text-align: center;
+        padding: 0.625rem !important;
+    }
+}

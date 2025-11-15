@@ -87,6 +87,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Einsatz-Dokumentation</title>
     <link rel="stylesheet" href="css/styles.css">
 
@@ -146,7 +147,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
         Akku:<br>
         <input type="text" class="akku" placeholder="Akku-Nummer" oninput="saveQuickData(this)"><br>
-
+        <br>   
         <img src="./img/flugzeug_start.png" data-status="gelandet" onclick="toggleFlight(this)">
         <img src="./img/personensuche.png" onclick="insertQuickText(getDrohnentext(this, ' meldet Person gefunden.'))">
         <img src="./img/warnung.png" onclick="insertQuickText(getDrohnentext(this, ' meldet technische Störung.'))">

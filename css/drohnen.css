@@ -1,7 +1,34 @@
+/* Modern Drohnen Styles */
+
 .btn-delete {
-    padding: 5px 10px;
+    padding: 0.5rem 1rem;
     color: white;
     text-decoration: none;
-    border-radius: 5px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    display: inline-block;
 }
 
+.btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn-delete {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-delete {
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem;
+    }
+}
