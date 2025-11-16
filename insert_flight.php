@@ -4,7 +4,6 @@ require_once 'utils.php';
 try {
     $config = include __DIR__ . '/config/config.php';
     
-    // Validate required config
     if (empty($config['path_to_dashboard_db'])) {
         http_response_code(400);
         header('Content-Type: application/json');
@@ -22,9 +21,7 @@ try {
         exit;
     }
     
-    // Get database path from config, fallback to default
     $databasePath = isset($config['database_path']) ? $config['database_path'] : 'einsatzbuch.db';
-    // Handle relative paths
     if (!is_absolute_path($databasePath)) {
         $databasePath = __DIR__ . '/' . $databasePath;
     }
@@ -39,7 +36,6 @@ try {
         exit;
     }
 
-    // Get POST data
     $input = json_decode(file_get_contents('php://input'), true);
 
     $pilot = $input['pilot'] ?? '';
@@ -49,32 +45,27 @@ try {
     $flight_start = $input['flight_start'];
     $flight_end = $input['flight_end'];
 
-    // Get the latest location_id from flight_locations
     $stmtLoc = $dashboard_db->prepare("SELECT id FROM flight_locations ORDER BY id DESC LIMIT 1");
     $stmtLoc->execute();
     $location_row = $stmtLoc->fetch(PDO::FETCH_ASSOC);
     $location_id = $location_row['id'] ?? null;
 
-    // Split pilot into vorname and nachname
     $pilotParts = explode(' ', $pilot, 2);
     $vorname = trim($pilotParts[0] ?? '');
     $nachname = trim($pilotParts[1] ?? '');
 
-    // Validate input
     if (empty($vorname) || empty($nachname)) {
         http_response_code(400);
         echo json_encode(['error' => 'Ungültiger Pilot-Name']);
         exit;
     }
 
-    // Validate battery number range
     if ($battery_number < 1 || $battery_number > 999) {
         http_response_code(400);
         echo json_encode(['error' => 'Ungültige Akku-Nummer']);
         exit;
     }
 
-    // Look up dashboard_id from personal table (using PDO)
     $stmtLookup = $db->prepare("SELECT dashboard_id FROM personal WHERE vorname = :vorname AND nachname = :nachname");
     if (!$stmtLookup) {
         http_response_code(500);
@@ -95,7 +86,6 @@ try {
 
     $pilot_id = $row['dashboard_id'];
 
-    // Insert into flights table (using PDO)
     $stmt = $dashboard_db->prepare("INSERT INTO flights (pilot_id, flight_date, flight_end_date, flight_location_id, drone_id, battery_number)
                           VALUES (:pilot_id, :flight_date, :flight_end_date, :flight_location_id, :drone_id, :battery_number)");
     if (!$stmt) {

@@ -4,7 +4,6 @@ require 'auth.php';
 requireAdminAuth();
 
 try {
-// Personal hinzufügen
 if(isset($_POST['add'])){
     $vorname = $_POST['vorname'] ?? '';
     $nachname = $_POST['nachname'] ?? '';
@@ -27,7 +26,6 @@ if(isset($_POST['add'])){
     }
 }
 
-// Personal löschen
 if(isset($_GET['delete'])){
     $stmt = $db->prepare("DELETE FROM personal WHERE id = ?");
     $stmt->execute([$_GET['delete']]);
@@ -35,7 +33,6 @@ if(isset($_GET['delete'])){
     exit;
 }
 
-// Personal bearbeiten (Formular anzeigen)
 $edit_personal = null;
 if(isset($_GET['edit'])){
     $stmt = $db->prepare("SELECT id, vorname, nachname, dashboard_id FROM personal WHERE id = ?");
@@ -43,7 +40,6 @@ if(isset($_GET['edit'])){
     $edit_personal = $stmt->fetch();
 }
 
-// Personal bearbeiten (Speichern)
 if(isset($_POST['update'])){
     $vorname = $_POST['vorname'] ?? '';
     $nachname = $_POST['nachname'] ?? '';
@@ -72,7 +68,6 @@ if(isset($_POST['update'])){
 }
 
 
-// Personal aus DB abrufen
 $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal ORDER BY nachname, vorname")->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {

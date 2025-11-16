@@ -3,7 +3,6 @@ $config = include __DIR__ . '/config/config.php';
 session_start();
 $error = '';
 
-// Include the auth.php file where setLoginCookie is defined
 include('auth.php');
 
 if(isAuthenticated()){

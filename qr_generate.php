@@ -1,5 +1,5 @@
 <?php
-require_once 'lib/phpqrcode/qrlib.php'; // Pfad zur Bibliothek anpassen
+require_once 'lib/phpqrcode/qrlib.php';
 
 if (!isset($_GET['data'])) {
     die("Keine Daten übergeben.");

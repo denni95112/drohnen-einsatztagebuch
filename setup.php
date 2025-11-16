@@ -1,5 +1,9 @@
 <?php
-// Define functions needed for library downloads (must be before any output)
+/**
+ * Check which required libraries are missing
+ *
+ * @return array Array of missing libraries with their download information
+ */
 function checkLibraries() {
         $libs = [
             'dompdf' => [
@@ -26,6 +30,12 @@ function checkLibraries() {
         return $missing;
     }
     
+/**
+ * Get manual installation instructions for a library
+ *
+ * @param array $libInfo Library information array
+ * @return array Manual installation instructions with title and steps
+ */
     function getManualInstallInstructions($libInfo) {
         $libDir = __DIR__ . '/lib';
         $instructions = [];
@@ -73,20 +83,24 @@ function checkLibraries() {
         return $instructions;
     }
     
+/**
+ * Download and extract a library from its URL
+ *
+ * @param array $libInfo Library information array with URL and name
+ * @param string $libDir Directory where library should be installed
+ * @return array Result array with success status and optional error message
+ */
     function downloadLibrary($libInfo, $libDir) {
-        // Create lib directory if it doesn't exist
         if (!is_dir($libDir)) {
             if (!mkdir($libDir, 0755, true)) {
                 return ['success' => false, 'error' => "Konnte Verzeichnis $libDir nicht erstellen"];
             }
         }
         
-        // Check if curl is available
         if (!function_exists('curl_init')) {
             return ['success' => false, 'error' => 'cURL ist nicht verfügbar. Bitte installiere die PHP cURL Extension.'];
         }
         
-        // Create temporary file for download
         $tempFile = tempnam(sys_get_temp_dir(), 'lib_download_');
         $fp = fopen($tempFile, 'w');
         
@@ -94,17 +108,14 @@ function checkLibraries() {
             return ['success' => false, 'error' => "Konnte temporäre Datei nicht erstellen"];
         }
         
-        // Download the file
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $libInfo['url']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_FILE, $fp);
         curl_setopt($ch, CURLOPT_USERAGENT, 'PHP Library Downloader');
-        curl_setopt($ch, CURLOPT_TIMEOUT, 300); // 5 minute timeout
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
         
-        // SSL certificate handling
-        // Try to use system certificate store first
         $caBundlePaths = [
             __DIR__ . '/cacert.pem', // Local certificate bundle
             ini_get('curl.cainfo'), // PHP ini setting
@@ -121,8 +132,6 @@ function checkLibraries() {
             }
         }
         
-        // If no certificate bundle found, disable SSL verification for local development
-        // This is acceptable for a setup script downloading from GitHub
         if (!$caBundleFound) {
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
@@ -139,23 +148,18 @@ function checkLibraries() {
             return ['success' => false, 'error' => "Download fehlgeschlagen: " . ($error ?: "HTTP $httpCode")];
         }
         
-        // Check if file was actually downloaded
         if (!file_exists($tempFile) || filesize($tempFile) === 0) {
             @unlink($tempFile);
             return ['success' => false, 'error' => "Download-Datei ist leer oder fehlt"];
         }
         
-        // Extract the zip file
         $extractPath = $libDir . '/' . $libInfo['name'] . '_temp';
         if (is_dir($extractPath)) {
-            // Remove existing temp directory
             rmdir_recursive($extractPath);
         }
         mkdir($extractPath, 0755, true);
         
-        // Try ZipArchive first, fallback to command-line unzip
         if (class_exists('ZipArchive')) {
-            // Use ZipArchive
             $zip = new ZipArchive();
             if ($zip->open($tempFile) !== TRUE) {
                 @unlink($tempFile);
@@ -166,11 +170,9 @@ function checkLibraries() {
             $zip->close();
             @unlink($tempFile);
         } else {
-            // Fallback: Use command-line unzip if available
             $unzipCommand = 'unzip';
             $unzipPath = null;
             
-            // Check if unzip command is available
             $whichUnzip = shell_exec('which unzip 2>/dev/null');
             if ($whichUnzip) {
                 $unzipPath = trim($whichUnzip);
@@ -179,7 +181,6 @@ function checkLibraries() {
             }
             
             if ($unzipPath) {
-                // Use command-line unzip
                 $tempFileEscaped = escapeshellarg($tempFile);
                 $extractPathEscaped = escapeshellarg($extractPath);
                 $command = "$unzipPath -q $tempFileEscaped -d $extractPathEscaped 2>&1";
@@ -194,7 +195,6 @@ function checkLibraries() {
                     return ['success' => false, 'error' => 'ZIP-Extraktion fehlgeschlagen: ' . implode("\n", $output)];
                 }
             } else {
-                // Neither ZipArchive nor unzip available
                 @unlink($tempFile);
                 rmdir_recursive($extractPath);
                 $manualInstructions = getManualInstallInstructions($libInfo);
@@ -208,20 +208,16 @@ function checkLibraries() {
             }
         }
         
-        // Find the actual library directory in the extracted files
         $files = scandir($extractPath);
         $actualLibPath = null;
         
-        // First check if files are directly in extract path
         if ($libInfo['name'] === 'dompdf' && (file_exists($extractPath . '/autoload.inc.php') || file_exists($extractPath . '/vendor/autoload.php'))) {
             $actualLibPath = $extractPath;
         } elseif ($libInfo['name'] === 'phpqrcode' && file_exists($extractPath . '/qrlib.php')) {
             $actualLibPath = $extractPath;
         } else {
-            // Search recursively
             $actualLibPath = findLibraryPath($extractPath, $libInfo['name']);
             
-            // If still not found, check common extraction patterns
             if (!$actualLibPath) {
                 foreach ($files as $file) {
                     if ($file === '.' || $file === '..') continue;
@@ -239,7 +235,6 @@ function checkLibraries() {
             return ['success' => false, 'error' => 'Bibliotheksverzeichnis in ZIP nicht gefunden'];
         }
         
-        // Move to final location
         $finalPath = $libDir . '/' . $libInfo['name'];
         if (is_dir($finalPath)) {
             rmdir_recursive($finalPath);
@@ -250,7 +245,6 @@ function checkLibraries() {
             return ['success' => false, 'error' => 'Konnte Bibliothek nicht nach ' . $finalPath . ' verschieben'];
         }
         
-        // Clean up any remaining temp files
         if (is_dir($extractPath)) {
             rmdir_recursive($extractPath);
         }
@@ -258,6 +252,12 @@ function checkLibraries() {
         return ['success' => true];
     }
     
+/**
+ * Recursively remove a directory and its contents
+ *
+ * @param string $dir Directory path to remove
+ * @return void
+ */
     function rmdir_recursive($dir) {
         if (!is_dir($dir)) return;
         $files = array_diff(scandir($dir), ['.', '..']);
@@ -268,6 +268,13 @@ function checkLibraries() {
         rmdir($dir);
     }
     
+/**
+ * Recursively find the library path within extracted files
+ *
+ * @param string $dir Directory to search in
+ * @param string $libName Name of the library to find
+ * @return string|null Path to library directory or null if not found
+ */
     function findLibraryPath($dir, $libName) {
         if (!is_dir($dir)) return null;
         
@@ -277,7 +284,6 @@ function checkLibraries() {
             $fullPath = $dir . '/' . $file;
             
             if ($libName === 'dompdf') {
-                // Check for dompdf autoload files
                 if (file_exists($fullPath . '/autoload.inc.php')) {
                     return $fullPath;
                 }
@@ -289,7 +295,6 @@ function checkLibraries() {
                     if ($found) return $found;
                 }
             } elseif ($libName === 'phpqrcode') {
-                // Check for phpqrcode main file
                 if (file_exists($fullPath . '/qrlib.php')) {
                     return $fullPath;
                 }
@@ -302,38 +307,27 @@ function checkLibraries() {
         return null;
 }
 
-// Handle library downloads FIRST - before any other output or checks
-// This MUST be the very first thing that runs after function definitions
-// Check if this is an AJAX request (check both POST and header)
 $isAjaxRequest = ($_SERVER['REQUEST_METHOD'] === 'POST' && 
                  (!empty($_POST['ajax']) || 
                   (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')));
 $isDownloadRequest = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['download_libs']));
 
-// If it's an AJAX request for downloads, handle it immediately
 if ($isAjaxRequest && $isDownloadRequest) {
-    // For AJAX requests, set JSON headers IMMEDIATELY - before anything else
-    // Clear any existing output buffers
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
-    // Set headers immediately to prevent any HTML output
     if (!headers_sent()) {
         header('Content-Type: application/json; charset=utf-8', true);
         header('Cache-Control: no-cache, must-revalidate', true);
         header('X-Content-Type-Options: nosniff', true);
-        // Prevent any redirects
         header_remove('Location');
     }
-    // Start output buffering
     ob_start();
     
-    // Suppress any warnings/errors from being displayed
     error_reporting(E_ALL);
     ini_set('display_errors', 0);
     ini_set('log_errors', 1);
     
-    // Set error handler to catch fatal errors
     register_shutdown_function(function() {
         $error = error_get_last();
         if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
@@ -364,16 +358,12 @@ if ($isAjaxRequest && $isDownloadRequest) {
             }
         }
         
-        // Get any output that might have been generated (errors, warnings)
         $output = ob_get_clean();
         
-        // Since we're in the AJAX handler, always return JSON
-        // Make absolutely sure no output was sent before headers
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         
-        // Clear any previous headers
         if (!headers_sent()) {
             header('Content-Type: application/json; charset=utf-8');
             header('Cache-Control: no-cache, must-revalidate');
@@ -385,7 +375,6 @@ if ($isAjaxRequest && $isDownloadRequest) {
             'remaining' => checkLibraries()
         ];
         
-        // Add output to response if there was any (for debugging)
         if (!empty($output) && trim($output) !== '') {
             $response['debug_output'] = substr($output, 0, 500); // Limit debug output
         }
@@ -405,7 +394,6 @@ if ($isAjaxRequest && $isDownloadRequest) {
     } catch (Throwable $e) {
         $output = ob_get_clean();
         
-        // Always return JSON for AJAX requests
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -434,9 +422,7 @@ if ($isAjaxRequest && $isDownloadRequest) {
     }
 }
 
-// Handle non-AJAX download requests (regular form submission)
 if ($isDownloadRequest && !$isAjaxRequest) {
-    // Start output buffering
     if (ob_get_level() == 0) {
         ob_start();
     } else {
@@ -458,7 +444,6 @@ if ($isDownloadRequest && !$isAjaxRequest) {
             }
         }
         
-        // Redirect to refresh page
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -479,21 +464,16 @@ if ($isDownloadRequest && !$isAjaxRequest) {
 
 $configPath = __DIR__ . '/config/config.php';
 
-// Don't redirect if this is an AJAX request for library downloads
-// Also check if headers were already sent (meaning we're in the download handler)
 if (file_exists($configPath) && !isset($_POST['download_libs']) && !headers_sent()) {
     header("Location: login.php");
     exit;
 }
 
-// Detect OS
 $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 
-// Generate suggested database paths based on OS
 $suggestedPaths = [];
 
 if ($isWindows) {
-    // Windows paths
     $suggestedPaths = [
         'C:/data/einsatzbuch.db' => 'C:/data/einsatzbuch.db - Empfohlen',
         'einsatzbuch.db' => '(einsatzbuch.db) - Weniger sicher',
@@ -502,7 +482,6 @@ if ($isWindows) {
         'C:/ProgramData/einsatzbuch.db' => 'C:/ProgramData/einsatzbuch.db',
     ];
 } else {
-    // Linux/Unix paths
     $user = get_current_user();
     $suggestedPaths = [
         '/var/data/einsatzbuch.db' => '/var/data/einsatzbuch.db - Empfohlen',
@@ -513,55 +492,60 @@ if ($isWindows) {
     ];
 }
 
+/**
+ * Generate a random token
+ *
+ * @param int $length Length of token in characters
+ * @return string Hexadecimal token string
+ */
 function generateToken($length = 16) {
     return bin2hex(random_bytes($length / 2));
 }
 
+/**
+ * Generate a random IV for encryption
+ *
+ * @param int $length Length of IV in bytes
+ * @return string Hexadecimal string representation of IV
+ */
 function generateIV($length = 16) {
     return bin2hex(random_bytes($length));
 }
 
-// Formular wurde abgeschickt
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
     $tokenName = 'dg_' . preg_replace('/[^a-z0-9]/i', '', $_POST['ort']) . '_tagebuch_token';
     $navigationTitle = trim($_POST['einheit']) . ' ' . trim($_POST['ort']);
-    $iv = substr(generateIV(), 0, 16); // 16 Bytes
+    $iv = substr(generateIV(), 0, 16);
     $passwordHash = hash('sha256', $_POST['passwort']);
     $adminPasswordHash = hash('sha256', $_POST['admin_passwort']);
     $readToken = generateToken(16);
     $domain = $_SERVER['HTTP_HOST'];
 
-    // Handle database path: use custom path if provided, otherwise use dropdown selection
     $database_path_dropdown = $_POST['database_path_dropdown'] ?? '';
     $database_path_custom = trim($_POST['database_path_custom'] ?? '');
     
     if ($database_path_dropdown === 'custom' && !empty($database_path_custom)) {
         $database_path = $database_path_custom;
     } elseif ($database_path_dropdown === 'custom' && empty($database_path_custom)) {
-        $database_path = 'einsatzbuch.db'; // Default if custom is selected but empty
+        $database_path = 'einsatzbuch.db';
     } elseif (!empty($database_path_dropdown)) {
         $database_path = $database_path_dropdown;
     } else {
-        $database_path = 'einsatzbuch.db'; // Default
+        $database_path = 'einsatzbuch.db';
     }
     
     $database_path = trim($database_path);
-    // Normalize path separators
     $database_path = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $database_path);
     $database_path_escaped = addslashes($database_path);
 
-    // Handle dashboard database path (optional)
     $path_to_dashboard_db = trim($_POST['path_to_dashboard_db'] ?? '');
     if (!empty($path_to_dashboard_db)) {
-        // Normalize path separators
         $path_to_dashboard_db = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path_to_dashboard_db);
         $path_to_dashboard_db_escaped = addslashes($path_to_dashboard_db);
     }
 
-    // Handle dashboard URL (optional)
     $dashboard_url = trim($_POST['dashboard_url'] ?? '');
     if (!empty($dashboard_url)) {
-        // Ensure URL is properly formatted
         $dashboard_url = rtrim($dashboard_url, '/');
         $dashboard_url_escaped = addslashes($dashboard_url);
     }
@@ -579,12 +563,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
         "    'domain' => '" . addslashes($domain) . "',\n" .
         "    'database_path' => '" . $database_path_escaped . "',\n";
     
-    // Add dashboard database path only if provided
     if (!empty($path_to_dashboard_db)) {
         $config .= "    'path_to_dashboard_db' => '" . $path_to_dashboard_db_escaped . "',\n";
     }
     
-    // Add dashboard URL only if provided
     if (!empty($dashboard_url)) {
         $config .= "    'dashboard_url' => '" . $dashboard_url_escaped . "',\n";
     }
@@ -597,14 +579,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
 
     file_put_contents($configPath, $config);
 
-    // DB initialisieren
     require_once 'db.php';
 
     header("Location: login.php");
     exit;
 }
 
-// Check for missing libraries
 $missingLibraries = checkLibraries();
 ?>
 

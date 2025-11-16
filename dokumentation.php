@@ -3,13 +3,11 @@ require_once 'db.php';
 require 'auth.php';
 requireAuth();
 
-// Einsatz-ID aus URL
 if (!isset($_GET['einsatz_id'])) {
     die("Keine Einsatz-ID angegeben.");
 }
 $einsatz_id = (int)$_GET['einsatz_id'];
 
-// Einsatznummer aktualisieren
 if (isset($_POST['einsatznummer_aktualisieren'])) {
     $einsatznummer = trim($_POST['einsatznummer'] ?? '');
     $stmt = $db->prepare("UPDATE einsatz SET einsatznummer = ? WHERE id = ?");
@@ -18,7 +16,6 @@ if (isset($_POST['einsatznummer_aktualisieren'])) {
     exit;
 }
 
-// Neuen Eintrag speichern
 if (isset($_POST['eintrag_speichern']) && !empty($_POST['text'])) {
     $stmt = $db->prepare("SELECT MAX(zeilennummer) FROM einsatz_dokumentation WHERE einsatz_id = ?");
     $stmt->execute([$einsatz_id]);
@@ -31,27 +28,22 @@ if (isset($_POST['eintrag_speichern']) && !empty($_POST['text'])) {
     exit;
 }
 
-// Einsatzdaten und Einträge abrufen
 $stmt = $db->prepare("SELECT id, einsatznummer, adresse, gps_lat, gps_lng, einsatzart, gruppenfuehrer_id, dokumentierende_id, startzeit, endzeit FROM einsatz WHERE id = ?");
 $stmt->execute([$einsatz_id]);
 $einsatz = $stmt->fetch(PDO::FETCH_ASSOC);
 $einsatz_abgeschlossen = !empty($einsatz['endzeit']);
 
 
-// Personal abrufen
 $stmt = $db->prepare("SELECT p.id, p.vorname, p.nachname, p.dashboard_id FROM personal p INNER JOIN einsatz_personal ep ON p.id = ep.personal_id WHERE ep.einsatz_id = ?");
 $stmt->execute([$einsatz_id]);
 $personal = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Drohnen abrufen
 $drohnen = $db->query("SELECT id, name FROM drohnen")->fetchAll(PDO::FETCH_ASSOC);
 
-// Dokumentation abrufen
 $stmt = $db->prepare("SELECT id, einsatz_id, zeilennummer, zeitpunkt, text FROM einsatz_dokumentation WHERE einsatz_id = ? ORDER BY zeilennummer DESC");
 $stmt->execute([$einsatz_id]);
 $eintraege = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Personal aktualisieren
 if (isset($_POST['personal_aktualisieren'])) {
     $stmt = $db->prepare("DELETE FROM einsatz_personal WHERE einsatz_id = ?");
     $stmt->execute([$einsatz_id]);
@@ -72,10 +64,8 @@ if (isset($_POST['personal_aktualisieren'])) {
     exit;
 }
 
-// Personal gesamt abrufen
 $personal_gesamt = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal ORDER BY nachname, vorname")->fetchAll(PDO::FETCH_ASSOC);
 
-// IDs anwesenden Personals abrufen - use array_flip for O(1) lookup
 $stmt = $db->prepare("SELECT personal_id FROM einsatz_personal WHERE einsatz_id = ?");
 $stmt->execute([$einsatz_id]);
 $personal_anwesend_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -109,7 +99,6 @@ $anwesendMap = array_flip($personal_anwesend_ids);
     <div class="panel">
         <form method="post">
             <?php 
-            // Reuse $personal_gesamt from line 75, use optimized array_flip for O(1) lookup
             foreach($personal_gesamt as $p): ?>
                 <label>
                     <input type="checkbox" name="personal[]" value="<?= $p['id'] ?>"
@@ -124,7 +113,6 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
     <h3>Quick Actions</h3>
     <?php 
-    // Cache personal options HTML to avoid repeated iterations
     $personalOptions = '';
     foreach ($personal as $p) {
         $name = htmlspecialchars($p['vorname'] . ' ' . $p['nachname']);

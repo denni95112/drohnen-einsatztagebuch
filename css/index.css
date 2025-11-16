@@ -1,5 +1,3 @@
-/* Modern Index Page Styles */
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f5f7fa;
@@ -12,7 +10,6 @@ body {
     padding: 2rem 1rem;
 }
 
-/* Limit width on desktop to tablet size */
 @media (min-width: 769px) {
     body {
         max-width: 900px;
@@ -92,7 +89,7 @@ h1 {
     body {
         padding: 1rem 0.75rem;
         min-height: auto;
-        max-width: 100%; /* Ensure full width on mobile */
+        max-width: 100%;
     }
 
     h1 {

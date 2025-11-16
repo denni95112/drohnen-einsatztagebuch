@@ -1,5 +1,4 @@
 <?php
-// Get database path from config if available, otherwise use default
 $databasePath = 'einsatzbuch.db';
 $configPath = __DIR__ . '/config/config.php';
 
@@ -10,7 +9,6 @@ if (file_exists($configPath)) {
     }
 }
 
-// Ensure directory exists for database file if path contains directories
 $dbDir = dirname($databasePath);
 if ($dbDir !== '.' && $dbDir !== '' && !is_dir($dbDir)) {
     mkdir($dbDir, 0755, true);
@@ -23,7 +21,6 @@ try {
     die("Datenbankfehler: Konnte keine Verbindung zur Datenbank herstellen. " . $e->getMessage());
 }
 
-// DB-Schema erzeugen
 $db->exec("CREATE TABLE IF NOT EXISTS personal (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     vorname TEXT,
@@ -62,7 +59,6 @@ $db->exec("CREATE TABLE IF NOT EXISTS drohnen (
     name TEXT NOT NULL
 )");
 
-// Create indexes for better query performance
 $db->exec("CREATE INDEX IF NOT EXISTS idx_einsatz_personal_einsatz_id ON einsatz_personal(einsatz_id)");
 $db->exec("CREATE INDEX IF NOT EXISTS idx_einsatz_personal_personal_id ON einsatz_personal(personal_id)");
 $db->exec("CREATE INDEX IF NOT EXISTS idx_einsatz_dokumentation_einsatz_id ON einsatz_dokumentation(einsatz_id)");

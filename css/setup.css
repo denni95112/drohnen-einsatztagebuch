@@ -1,5 +1,3 @@
-/* Modern Setup Styles */
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f5f7fa;
@@ -8,7 +6,6 @@ body {
     color: #2d3748;
 }
 
-/* Limit width on desktop to tablet size */
 @media (min-width: 769px) {
     body {
         max-width: 800px;
@@ -106,7 +103,6 @@ button[type="submit"]:disabled {
     transform: none;
 }
 
-/* Tooltip styling */
 .tooltip {
     position: relative;
     display: inline-block;
@@ -160,7 +156,6 @@ small {
     font-size: 0.875rem;
 }
 
-/* Library Section */
 .library-section {
     background: #fff3cd;
     border: 2px solid #ffc107;
@@ -269,12 +264,11 @@ small {
     font-weight: 500;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     body {
         padding: 1rem 0.75rem;
         margin: 1rem auto;
-        max-width: 100% !important; /* Ensure full width on mobile */
+        max-width: 100% !important;
     }
 
     h2 {

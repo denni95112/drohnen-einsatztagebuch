@@ -8,7 +8,6 @@ if (!isset($_GET['einsatz_id'])) {
 
 $einsatz_id = (int)$_GET['einsatz_id'];
 
-// Dokumentation abrufen
 $stmt = $db->prepare("SELECT id, einsatz_id, zeilennummer, zeitpunkt, text FROM einsatz_dokumentation WHERE einsatz_id = ? ORDER BY zeilennummer DESC");
 $stmt->execute([$einsatz_id]);
 $eintraege = $stmt->fetchAll(PDO::FETCH_ASSOC);

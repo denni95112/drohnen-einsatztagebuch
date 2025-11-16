@@ -10,7 +10,6 @@ require 'auth.php';
 requireAuth();
 $config = include __DIR__ . '/config/config.php';
 $isAdmin = isAdminAuthenticated();
-// Letzte Einsatz-ID abrufen
 $stmt = $db->query("SELECT id FROM einsatz ORDER BY id DESC LIMIT 1");
 $letzter_einsatz = $stmt->fetchColumn();
 ?>

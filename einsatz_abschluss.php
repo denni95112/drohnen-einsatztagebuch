@@ -11,12 +11,10 @@ if (!isset($_GET['einsatz_id'])) {
 
 $einsatz_id = (int)$_GET['einsatz_id'];
 
-// Prüfen ob Ende-Eintrag bereits existiert
 $stmt = $db->prepare("SELECT COUNT(*) FROM einsatz_dokumentation WHERE einsatz_id = ? AND text = ?");
 $stmt->execute([$einsatz_id, 'Ende der Dokumentation']);
 
 if ($stmt->fetchColumn() == 0) {
-    // Zeilennummer ermitteln und Ende-Eintrag hinzufügen
     $stmt = $db->prepare("SELECT MAX(zeilennummer) FROM einsatz_dokumentation WHERE einsatz_id = ?");
     $stmt->execute([$einsatz_id]);
     $zeilennummer = (int)$stmt->fetchColumn() + 1;
@@ -25,7 +23,6 @@ if ($stmt->fetchColumn() == 0) {
     $stmt->execute([$einsatz_id, $zeilennummer, 'Ende der Dokumentation']);
 }
 
-// Einsatz als beendet markieren
 $stmt = $db->prepare("SELECT endzeit FROM einsatz WHERE id = ?");
 $stmt->execute([$einsatz_id]);
 $currentEnd = $stmt->fetchColumn();
@@ -35,7 +32,6 @@ if (!$currentEnd) {
     $stmt->execute([$einsatz_id]);
 }
 
-// Einsatzdetails abrufen
 $stmt = $db->prepare("SELECT e.id, e.einsatznummer, e.adresse, e.gps_lat, e.gps_lng, e.einsatzart, e.gruppenfuehrer_id, e.dokumentierende_id, e.startzeit, e.endzeit,
        p1.vorname || ' ' || p1.nachname AS gruppenfuehrer,
        p2.vorname || ' ' || p2.nachname AS dokumentierende
@@ -46,19 +42,16 @@ WHERE e.id = ?");
 $stmt->execute([$einsatz_id]);
 $einsatz = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Anwesendes Personal abrufen
 $stmt = $db->prepare("SELECT p.vorname, p.nachname FROM personal p 
                       INNER JOIN einsatz_personal ep ON p.id = ep.personal_id 
                       WHERE ep.einsatz_id = ?");
 $stmt->execute([$einsatz_id]);
 $personal = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Dokumentation abrufen
 $stmt = $db->prepare("SELECT id, einsatz_id, zeilennummer, zeitpunkt, text FROM einsatz_dokumentation WHERE einsatz_id = ? ORDER BY zeilennummer ASC");
 $stmt->execute([$einsatz_id]);
 $dokumentation = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// HTML für PDF generieren
 $html = "
 <h1>Einsatzbericht {$config['navigation_title']}</h1>
 <p><strong>Einsatznummer:</strong> {$einsatz['einsatznummer']}</p>
@@ -76,7 +69,6 @@ $html = "
     <th>Name</th>
 </tr>";
 
-// Optimize string concatenation using array
 $personalRows = [];
 foreach ($personal as $p) {
     $personalRows[] = "<tr><td>{$p['vorname']} {$p['nachname']}</td></tr>";
@@ -93,7 +85,6 @@ $html .= "</table>
     <th>Text</th>
 </tr>";
 
-// Optimize string concatenation using array
 $dokumentationRows = [];
 foreach ($dokumentation as $d) {
     $dokumentationRows[] = "<tr><td>{$d['zeilennummer']}</td><td>{$d['zeitpunkt']}</td><td>{$d['text']}</td></tr>";
@@ -102,7 +93,6 @@ $html .= implode('', $dokumentationRows);
 
 $html .= "</table>";
 
-// PDF generieren
 $dompdf = new Dompdf();
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');

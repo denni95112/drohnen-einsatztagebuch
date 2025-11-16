@@ -4,7 +4,6 @@ require 'auth.php';
 requireAdminAuth();
 $config = include __DIR__ . '/config/config.php';
 
-// Alle Einsätze abrufen
 $stmt = $db->query("SELECT id, einsatznummer, adresse, startzeit, endzeit FROM einsatz ORDER BY id DESC");
 $einsaetze = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>

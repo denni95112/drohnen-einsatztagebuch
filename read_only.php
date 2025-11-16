@@ -14,7 +14,6 @@ if (!isset($_GET['einsatz_id'])) {
 
 $einsatz_id = (int)$_GET['einsatz_id'];
 
-// Einsatzdaten und Einträge abrufen
 $stmt = $db->prepare("SELECT id, einsatznummer, adresse, gps_lat, gps_lng, einsatzart, gruppenfuehrer_id, dokumentierende_id, startzeit, endzeit FROM einsatz WHERE id = ?");
 $stmt->execute([$einsatz_id]);
 $einsatz = $stmt->fetch(PDO::FETCH_ASSOC);

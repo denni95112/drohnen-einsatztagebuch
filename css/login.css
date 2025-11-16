@@ -1,5 +1,3 @@
-/* Modern Login Styles */
-
 body, html {
     margin: 0;
     padding: 0;
@@ -12,7 +10,6 @@ body, html {
     padding: 1rem;
 }
 
-/* Limit width on desktop to tablet size */
 @media (min-width: 769px) {
     body, html {
         max-width: 900px;
@@ -138,16 +135,15 @@ footer p {
     margin: 0.25rem 0;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     body, html {
-        max-width: 100%; /* Ensure full width on mobile */
+        max-width: 100%;
     }
 }
 
 @media (max-width: 480px) {
     body, html {
-        max-width: 100%; /* Ensure full width on mobile */
+        max-width: 100%;
     }
 
     .login-container {

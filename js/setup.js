@@ -20,9 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     dropdown.addEventListener('change', toggleCustomInput);
-    toggleCustomInput(); // Initialize on page load
+    toggleCustomInput();
 
-    // Handle library download form
     const libDownloadForm = document.getElementById('libDownloadForm');
     if (libDownloadForm) {
         libDownloadForm.addEventListener('submit', function(e) {
@@ -48,11 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .then(response => {
-                // Check if response is actually JSON
                 const contentType = response.headers.get('content-type') || '';
                 if (!contentType.includes('application/json')) {
                     return response.text().then(text => {
-                        // Show the actual response for debugging
                         const errorMsg = 'Server returned non-JSON response. Response type: ' + contentType + '. ';
                         const preview = text.substring(0, 500);
                         throw new Error(errorMsg + 'Response preview: ' + preview);
@@ -64,13 +61,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 let html = '';
                 let allSuccess = true;
                 
-                // Check for general error
                 if (data.error) {
                     html += '<p style="color: #dc3545; font-weight: 500;">✗ ' + data.error + '</p>';
                     allSuccess = false;
                 }
                 
-                // Show debug output if present (helps identify issues)
                 if (data.debug_output) {
                     html += '<p style="color: #856404; font-size: 12px; font-family: monospace; background: #f8f9fa; padding: 5px; border-radius: 3px;">Debug: ' + data.debug_output.substring(0, 200) + '</p>';
                 }
@@ -82,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else {
                             html += '<p style="color: #dc3545; font-weight: 500;">✗ ' + lib + ': ' + (result.error || 'Fehler') + '</p>';
                             
-                            // Show manual installation instructions if available
                             if (result.manual_instructions) {
                                 html += '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 15px; margin: 10px 0;">';
                                 html += '<h4 style="margin-top: 0; color: #856404;">' + result.manual_instructions.title + ':</h4>';

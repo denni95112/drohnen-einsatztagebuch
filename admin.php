@@ -6,16 +6,13 @@ requireAdminAuth();
 
 $configPath = __DIR__ . '/config/config.php';
 $config = include $configPath;
-// Get database path from config, fallback to default
 $databasePath = isset($config['database_path']) ? $config['database_path'] : 'einsatzbuch.db';
-// Resolve to absolute path for file operations
 if (is_absolute_path($databasePath)) {
     $dbFile = $databasePath;
 } else {
     $dbFile = __DIR__ . '/' . $databasePath;
 }
 
-// Einsätze löschen
 if (isset($_POST['delete_all_einsaetze'])) {
     $db->beginTransaction();
     try {
@@ -31,7 +28,6 @@ if (isset($_POST['delete_all_einsaetze'])) {
     }
 }
 
-// Datenbank herunterladen
 if (isset($_GET['download_db'])) {
     if (file_exists($dbFile)) {
         header('Content-Type: application/octet-stream');
@@ -41,7 +37,6 @@ if (isset($_GET['download_db'])) {
     }
 }
 
-// Datenbank hochladen
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['db_upload'])) {
     if ($_FILES['db_upload']['error'] == 0) {
         move_uploaded_file($_FILES['db_upload']['tmp_name'], $dbFile);
@@ -50,24 +45,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['db_upload'])) {
     }
 }
 
-// Datenbank löschen
 if (isset($_POST['delete_db']) && file_exists($dbFile)) {
     unlink($dbFile);
     header("Location: admin.php?success=db_geloescht");
     exit;
 }
 
-// Datenbank neu anlegen (falls nicht vorhanden)
 if (isset($_POST['create_db']) && !file_exists($dbFile)) {
     require_once 'db.php';
     header("Location: admin.php?success=db_neu_erstellt");
     exit;
 }
 
-// Einheit ändern
 if (isset($_POST['update_unit'])) {
     $config['navigation_title'] = trim($_POST['einheit']);
-    // Atomic write: write to temp file, then rename
     $tempPath = $configPath . '.tmp';
     $configContent = "<?php\nreturn " . var_export($config, true) . ";\n";
     if (file_put_contents($tempPath, $configContent) !== false) {
@@ -83,10 +74,8 @@ if (isset($_POST['update_unit'])) {
     }
 }
 
-// Passwort ändern
 if (isset($_POST['update_password'])) {
     $config['password_hash'] = hash('sha256', $_POST['admin_passwort']);
-    // Atomic write: write to temp file, then rename
     $tempPath = $configPath . '.tmp';
     $configContent = "<?php\nreturn " . var_export($config, true) . ";\n";
     if (file_put_contents($tempPath, $configContent) !== false) {

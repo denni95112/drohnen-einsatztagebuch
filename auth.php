@@ -1,7 +1,9 @@
 <?php
 session_start();
 
-// Load config once and cache it
+/**
+ * Load config once and cache it
+ */
 static $app_config = null;
 if ($app_config === null) {
     $configPath = __DIR__ . '/config/config.php';
@@ -12,25 +14,31 @@ if ($app_config === null) {
     }
 }
 
-// Function to get config (optimized - loads once)
+/**
+ * Get application configuration
+ *
+ * @return array Configuration array
+ */
 function getConfig() {
     global $app_config;
     return $app_config;
 }
 
-// Function to check if the user is authenticated based on session or cookie
+/**
+ * Check if the user is authenticated based on session or cookie
+ *
+ * @return bool True if authenticated, false otherwise
+ */
 function isAuthenticated() {
     $config = getConfig();
-    // Check if session is set for logged in
 
     if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
         return true;
     }
 
-    // Check if the login cookie exists
     if (isset($_COOKIE[$config['token_name']])) {
         if (hash('sha256', getPasswortFromCookie()) === $config['password_hash']) {
-            $_SESSION['loggedin'] = true; // Set session based on cookie validation
+            $_SESSION['loggedin'] = true;
             return true;
         }else{
             $_SESSION['loggedin'] = false;
@@ -39,18 +47,21 @@ function isAuthenticated() {
     return false;
 }
 
+/**
+ * Check if admin user is authenticated
+ *
+ * @return bool True if admin authenticated, false otherwise
+ */
 function isAdminAuthenticated() {
     $config = getConfig();
-    // Check if session is set for logged in
 
     if (isset($_SESSION['adminloggedin']) && $_SESSION['adminloggedin'] === true) {
         return true;
     }
 
-    // Check if the login cookie exists
     if (isset($_COOKIE[$config['token_name']])) {
         if (hash('sha256', getPasswortFromCookie()) === $config['admin_password_hash']) {
-            $_SESSION['adminloggedin'] = true; // Set session based on cookie validation
+            $_SESSION['adminloggedin'] = true;
             return true;
         }else{
             $_SESSION['adminloggedin'] = false;
@@ -59,7 +70,11 @@ function isAdminAuthenticated() {
     return false;
 }
 
-// Function to require authentication (redirect if not authenticated)
+/**
+ * Require authentication, redirect to login if not authenticated
+ *
+ * @return void
+ */
 function requireAuth() {
     if (!isAuthenticated()) {
         header('Location: login.php');
@@ -67,6 +82,11 @@ function requireAuth() {
     }
 }
 
+/**
+ * Require admin authentication, redirect to index if not authenticated
+ *
+ * @return void
+ */
 function requireAdminAuth() {
     if (!isAdminAuthenticated()) {
         header('Location: index.php');
@@ -74,23 +94,34 @@ function requireAdminAuth() {
     }
 }
 
+/**
+ * Set login cookie with password
+ *
+ * @param string $password Password to encode and store
+ * @return void
+ */
 function setLoginCookie($password) {
     $config = getConfig();
-    // Base64 encode the password
     $cookie_value = base64_encode($password);
-
-    // Set the cookie with a 30-day expiration
     setcookie($config['token_name'], $cookie_value, time() + (30 * 24 * 60 * 60), "/");
 }
 
+/**
+ * Get password from cookie
+ *
+ * @return string Decoded password
+ */
 function getPasswortFromCookie() {
     $config = getConfig();
     $cookie_value = $_COOKIE[$config['token_name']];
     return base64_decode($cookie_value);
 }
 
-
-// Function to log the user out and delete the cookie
+/**
+ * Log out user and delete cookie
+ *
+ * @return void
+ */
 function logout() {
     $config = getConfig();
     setcookie($config['token_name'], '', time() - 3600, "/");

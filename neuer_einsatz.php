@@ -4,9 +4,7 @@ require 'auth.php';
 requireAuth();
 
 
-// Einsatz starten
 if (isset($_POST['einsatz_starten'])) {
-    // Input validation
     $einsatznummer = !empty($_POST['einsatznummer']) ? trim($_POST['einsatznummer']) : date('Ymd');
     $adresse = trim($_POST['adresse'] ?? '');
     $gps_lat = trim($_POST['gps_lat'] ?? '');
@@ -15,7 +13,6 @@ if (isset($_POST['einsatz_starten'])) {
     $gruppenfuehrer_id = (int)($_POST['gruppenfuehrer_id'] ?? 0);
     $dokumentierende_id = (int)($_POST['dokumentierende_id'] ?? 0);
 
-    // Validate required fields
     if (empty($adresse)) {
         die("Fehler: Adresse ist erforderlich.");
     }
@@ -26,7 +23,6 @@ if (isset($_POST['einsatz_starten'])) {
         die("Fehler: Gruppenführer und dokumentierende Person müssen ausgewählt werden.");
     }
     
-    // Validate GPS coordinates if provided
     if (!empty($gps_lat) && (!is_numeric($gps_lat) || $gps_lat < -90 || $gps_lat > 90)) {
         die("Fehler: Ungültige GPS-Breitengrad.");
     }
@@ -47,7 +43,6 @@ if (isset($_POST['einsatz_starten'])) {
 
     $einsatz_id = $db->lastInsertId();
 
-    // Batch insert for personnel
     if (!empty($_POST['personal']) && is_array($_POST['personal'])) {
         $db->beginTransaction();
         try {

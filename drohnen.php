@@ -3,7 +3,6 @@ require_once 'db.php';
 require 'auth.php';
 requireAdminAuth();
 
-// Drohne hinzufügen
 if (isset($_POST['add'])) {
     $stmt = $db->prepare("INSERT INTO drohnen (name) VALUES (?)");
     $stmt->execute([$_POST['name']]);
@@ -11,7 +10,6 @@ if (isset($_POST['add'])) {
     exit;
 }
 
-// Drohne löschen
 if (isset($_GET['delete'])) {
     $stmt = $db->prepare("DELETE FROM drohnen WHERE id = ?");
     $stmt->execute([$_GET['delete']]);
@@ -19,7 +17,6 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
-// Drohnen abrufen
 $drohnen = $db->query("SELECT id, name FROM drohnen ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
