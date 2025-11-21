@@ -89,6 +89,7 @@ $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal
     <link rel="stylesheet" href="css/personal.css">
 </head>
 <body>
+<?php include 'header.php'; ?>
 <h2>Personalverwaltung</h2>
 
 <form method="post">
@@ -135,6 +136,8 @@ $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal
 </table>
 
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
+
+<?php include 'footer.php'; ?>
 
 </body>
 </html>

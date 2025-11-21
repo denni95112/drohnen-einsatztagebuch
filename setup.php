@@ -520,6 +520,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
     $adminPasswordHash = hash('sha256', $_POST['admin_passwort']);
     $readToken = generateToken(16);
     $domain = $_SERVER['HTTP_HOST'];
+    
+    $logo_path = '';
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+        $fileType = $_FILES['logo']['type'];
+        
+        if (in_array($fileType, $allowedTypes)) {
+            $uploadDir = __DIR__ . '/uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $extension = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+            $fileName = 'logo_' . time() . '_' . uniqid() . '.' . $extension;
+            $filePath = $uploadDir . $fileName;
+            
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $filePath)) {
+                $logo_path = 'uploads/' . $fileName;
+            }
+        }
+    }
 
     $database_path_dropdown = $_POST['database_path_dropdown'] ?? '';
     $database_path_custom = trim($_POST['database_path_custom'] ?? '');
@@ -563,6 +584,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
         "    'domain' => '" . addslashes($domain) . "',\n" .
         "    'database_path' => '" . $database_path_escaped . "',\n";
     
+    if (!empty($logo_path)) {
+        $config .= "    'logo_path' => '" . addslashes($logo_path) . "',\n";
+    }
+    
     if (!empty($path_to_dashboard_db)) {
         $config .= "    'path_to_dashboard_db' => '" . $path_to_dashboard_db_escaped . "',\n";
     }
@@ -598,6 +623,7 @@ $missingLibraries = checkLibraries();
     <script src="js/setup.js"></script>
 </head>
 <body>
+    <?php include 'header.php'; ?>
     <h2>Erstkonfiguration Einsatztagebuch</h2>
 
     <?php if (!empty($missingLibraries)): ?>
@@ -620,7 +646,7 @@ $missingLibraries = checkLibraries();
     </div>
     <?php endif; ?>
 
-    <form method="post" id="configForm">
+    <form method="post" id="configForm" enctype="multipart/form-data">
         <label>Einheit (z. B. Feuerwehr, Drohnengruppe, etc.):<br>
             <input type="text" name="einheit" required>
         </label>
@@ -690,6 +716,17 @@ $missingLibraries = checkLibraries();
         </label>
         <input type="url" name="dashboard_url" placeholder="z.B. https://example.com/dashboard oder leer lassen">
         <br><br>
+        <label>
+            Logo hochladen (optional)
+            <span class="tooltip">?
+                <span class="tooltiptext">
+                    Lade ein Logo hoch, das links neben dem Titel angezeigt wird. Unterstützte Formate: JPG, PNG, GIF, SVG, WebP. Maximale Größe: 5MB.
+                </span>
+            </span>
+        </label>
+        <input type="file" name="logo" accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
+        <small>Optional: Logo wird links neben dem Titel angezeigt</small>
+        <br><br>
 
         <button type="submit" name="submit_config" id="submitConfigBtn" <?= !empty($missingLibraries) ? 'disabled' : '' ?>>
             Konfiguration abschließen
@@ -700,5 +737,8 @@ $missingLibraries = checkLibraries();
         </small>
         <?php endif; ?>
     </form>
+
+<?php include 'footer.php'; ?>
+
 </body>
 </html>

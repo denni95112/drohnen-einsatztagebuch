@@ -19,6 +19,8 @@ $einsaetze = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
 
+<?php include 'header.php'; ?>
+
 <h2>Einsatzliste</h2>
 
 <table id="einsatzTabelle">
@@ -45,6 +47,8 @@ $einsaetze = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </table>
 
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
+
+<?php include 'footer.php'; ?>
 
 <script src="js/einsatzliste.js"></script>
 

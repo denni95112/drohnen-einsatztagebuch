@@ -44,10 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
             <button type="submit" class="btn-login">Einloggen</button>
         </form>
-        <footer>
-            <p>MIT License - Erstellt von Dennis Bögner</p>
-            <p>Version 1.0.0</p>
-        </footer>
+        <?php include 'footer.php'; ?>
     </div>
 </body>
 </html>

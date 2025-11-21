@@ -58,6 +58,10 @@ logs/
 *.backup
 *.old
 
+# Upload-Verzeichnis (hochgeladene Logos)
+uploads/*
+!uploads/.gitkeep
+
 # Konfigurations-Templates (config.php.example sollte committed werden)
 # config/config.php.example
 
