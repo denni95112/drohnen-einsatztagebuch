@@ -182,62 +182,119 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
     </div>
 <?php endif; ?>
 
-<!-- Alle Einsätze löschen -->
-<form method="post" onsubmit="return confirm('Wirklich alle Einsätze löschen?')">
-    <button type="submit" name="delete_all_einsaetze" class="danger">Alle Einsätze löschen</button>
-</form>
+<div class="admin-sections">
+    <!-- Datenbank Verwaltung -->
+    <div class="admin-section">
+        <h3>📊 Datenbank Verwaltung</h3>
+        <div class="admin-actions">
+            <form method="get" class="admin-action-item">
+                <button type="submit" name="download_db" class="btn-action">
+                    <span class="action-icon">⬇️</span>
+                    <span>Datenbank herunterladen</span>
+                </button>
+            </form>
+            
+            <form method="post" enctype="multipart/form-data" class="admin-action-item">
+                <label class="file-input-label">
+                    <input type="file" name="db_upload" required class="file-input">
+                    <span class="file-input-button">📤 Datei auswählen</span>
+                    <span class="file-input-text">Keine Datei ausgewählt</span>
+                </label>
+                <button type="submit" class="btn-action">Datenbank hochladen</button>
+            </form>
+            
+            <?php if (!file_exists($dbFile)): ?>
+            <form method="post" class="admin-action-item">
+                <button type="submit" name="create_db" class="btn-action">
+                    <span class="action-icon">➕</span>
+                    <span>Datenbank neu anlegen</span>
+                </button>
+            </form>
+            <?php endif; ?>
+        </div>
+    </div>
 
-<!-- Datenbank herunterladen -->
-<form method="get">
-    <button type="submit" name="download_db">Datenbank herunterladen</button>
-</form>
+    <!-- Einsätze Verwaltung -->
+    <div class="admin-section admin-section-danger">
+        <h3>⚠️ Einsätze Verwaltung</h3>
+        <form method="post" onsubmit="return confirm('Wirklich alle Einsätze löschen? Diese Aktion kann nicht rückgängig gemacht werden!')">
+            <button type="submit" name="delete_all_einsaetze" class="danger btn-full">
+                🗑️ Alle Einsätze löschen
+            </button>
+        </form>
+    </div>
 
-<!-- Datenbank hochladen -->
-<form method="post" enctype="multipart/form-data">
-    <input type="file" name="db_upload" required>
-    <button type="submit">Datenbank hochladen</button>
-</form>
+    <!-- Einstellungen -->
+    <div class="admin-section">
+        <h3>⚙️ Einstellungen</h3>
+        
+        <form method="post" class="admin-form-item">
+            <label>Name der Einheit:</label>
+            <input type="text" name="einheit" value="<?= htmlspecialchars($config['navigation_title']) ?>" required>
+            <button type="submit" name="update_unit" class="btn-action-inline">💾 Speichern</button>
+        </form>
 
-<!-- Datenbank löschen -->
-<!-- <form method="post" onsubmit="return confirm('Wirklich die gesamte Datenbank löschen?')">
-    <button type="submit" name="delete_db" class="danger">Datenbankdatei löschen</button>
-</form> -->
+        <form method="post" class="admin-form-item">
+            <label>Admin Passwort ändern:</label>
+            <input type="password" name="admin_passwort" placeholder="Neues Passwort eingeben" required>
+            <button type="submit" name="update_password" class="btn-action-inline">🔒 Passwort ändern</button>
+        </form>
+    </div>
 
-<!-- Datenbank neu anlegen -->
-<?php if (!file_exists($dbFile)): ?>
-<form method="post">
-    <button type="submit" name="create_db">Datenbank neu anlegen</button>
-</form>
-<?php endif; ?>
-
-<!-- Name der Einheit ändern -->
-<form method="post">
-    <label>Neuer Name der Einheit:</label>
-    <input type="text" name="einheit" value="<?= htmlspecialchars($config['navigation_title']) ?>" required>
-    <button type="submit" name="update_unit">Speichern</button>
-</form>
-
-<!-- Passwort ändern -->
-<form method="post">
-    <label>Neues Passwort:</label>
-    <input type="password" name="admin_passwort" required>
-    <button type="submit" name="update_password">Passwort ändern</button>
-</form>
-
-<!-- Logo hochladen/ändern -->
-<form method="post" enctype="multipart/form-data">
-    <label>Logo hochladen/ändern:</label>
-    <input type="file" name="logo" accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
-    <?php if (!empty($config['logo_path']) && file_exists(__DIR__ . '/' . $config['logo_path'])): ?>
-        <p>Aktuelles Logo: <img src="<?= htmlspecialchars($config['logo_path']) ?>" alt="Logo" style="max-height: 40px; vertical-align: middle;"></p>
-        <button type="submit" name="delete_logo" class="danger" onclick="return confirm('Logo wirklich löschen?')">Logo löschen</button>
-    <?php endif; ?>
-    <button type="submit">Logo hochladen</button>
-</form>
+    <!-- Logo Verwaltung -->
+    <div class="admin-section">
+        <h3>🖼️ Logo Verwaltung</h3>
+        
+        <?php if (!empty($config['logo_path']) && file_exists(__DIR__ . '/' . $config['logo_path'])): ?>
+        <div class="current-logo">
+            <p><strong>Aktuelles Logo:</strong></p>
+            <div class="logo-preview">
+                <img src="<?= htmlspecialchars($config['logo_path']) ?>" alt="Logo">
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <form method="post" enctype="multipart/form-data" class="admin-form-item">
+            <label class="file-input-label">
+                <input type="file" name="logo" accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp" class="file-input">
+                <span class="file-input-button">📁 Logo auswählen</span>
+                <span class="file-input-text">Keine Datei ausgewählt</span>
+            </label>
+            <div class="logo-actions">
+                <button type="submit" class="btn-action">📤 Logo hochladen</button>
+                <?php if (!empty($config['logo_path']) && file_exists(__DIR__ . '/' . $config['logo_path'])): ?>
+                    <button type="submit" name="delete_logo" class="danger btn-action" onclick="return confirm('Logo wirklich löschen?')">🗑️ Logo löschen</button>
+                <?php endif; ?>
+            </div>
+        </form>
+    </div>
+</div>
 
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
 
 <?php include 'footer.php'; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInputs = document.querySelectorAll('.file-input');
+    
+    fileInputs.forEach(input => {
+        const textSpan = input.nextElementSibling.nextElementSibling;
+        
+        input.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                textSpan.textContent = this.files[0].name;
+                textSpan.style.color = '#10b981';
+                textSpan.style.fontStyle = 'normal';
+            } else {
+                textSpan.textContent = 'Keine Datei ausgewählt';
+                textSpan.style.color = '#64748b';
+                textSpan.style.fontStyle = 'italic';
+            }
+        });
+    });
+});
+</script>
 
 </body>
 </html>
