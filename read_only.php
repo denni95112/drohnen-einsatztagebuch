@@ -29,6 +29,7 @@ $einsatz = $stmt->fetch(PDO::FETCH_ASSOC);
 
 </head>
 <body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>">
+<?php include 'header.php'; ?>
 <h2>Einsatz-Dokumentation (Lese-Modus) (#<?= htmlspecialchars($einsatz['einsatznummer']) ?>)</h2>
 
 <br><br>
@@ -48,6 +49,8 @@ $einsatz = $stmt->fetch(PDO::FETCH_ASSOC);
 
 <br>
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
+
+<?php include 'footer.php'; ?>
 
 <script src="js/read_only.js"></script>
 

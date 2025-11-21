@@ -102,6 +102,8 @@ if (isset($_POST['update_password'])) {
 </head>
 <body>
 
+<?php include 'header.php'; ?>
+
 <h2>Admin Verwaltung</h2>
 
 <?php if (isset($_GET['success'])): ?>
@@ -163,6 +165,8 @@ if (isset($_POST['update_password'])) {
 </form>
 
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
+
+<?php include 'footer.php'; ?>
 
 </body>
 </html>

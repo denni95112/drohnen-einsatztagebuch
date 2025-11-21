@@ -23,7 +23,7 @@ $letzter_einsatz = $stmt->fetchColumn();
 </head>
 <body>
 
-<h1>Einsatztagebuch <?php echo htmlspecialchars($config['navigation_title']) ?></h1>
+<?php include 'header.php'; ?>
 
 <div class="button-container">
     <?php if ($config['dashboard_url']): ?>
@@ -63,6 +63,8 @@ $letzter_einsatz = $stmt->fetchColumn();
     <?php endif; ?>
     <a href="logout.php" class="btn">Logout</a>
 </div>
+
+<?php include 'footer.php'; ?>
 
 </body>
 </html>

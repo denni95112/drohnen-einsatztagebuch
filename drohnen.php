@@ -30,6 +30,8 @@ $drohnen = $db->query("SELECT id, name FROM drohnen ORDER BY name ASC")->fetchAl
 </head>
 <body>
 
+<?php include 'header.php'; ?>
+
 <div class="container">
     <h2>Drohnen-Verwaltung</h2>
 
@@ -69,6 +71,8 @@ $drohnen = $db->query("SELECT id, name FROM drohnen ORDER BY name ASC")->fetchAl
         <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
     </div>
 </div>
+
+<?php include 'footer.php'; ?>
 
 </body>
 </html>

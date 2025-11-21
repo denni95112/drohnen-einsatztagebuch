@@ -83,6 +83,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
 </head>
 <body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>">
+<?php include 'header.php'; ?>
 <h2>Einsatz-Dokumentation (#<?= htmlspecialchars($einsatz['einsatznummer']) ?>)</h2>
 
 <?php if (!$einsatz_abgeschlossen): ?>
@@ -183,6 +184,8 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
 <br><br><br><br>
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
+
+<?php include 'footer.php'; ?>
 
 <script src="js/dokumentation.js"></script>
 

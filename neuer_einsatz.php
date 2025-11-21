@@ -74,6 +74,7 @@ $einsatzarten = ["Brandeinsatz", "Ölspur", "Öl auf Gewässer", "Personensuche"
     <script src="js/neuer_einsatz.js"></script>
 </head>
 <body>
+<?php include 'header.php'; ?>
 <h2>Neuen Einsatz starten</h2>
 <form method="post">
     <label>Einsatznummer:
@@ -127,5 +128,8 @@ $einsatzarten = ["Brandeinsatz", "Ölspur", "Öl auf Gewässer", "Personensuche"
 </form>
 <br><br>
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
+
+<?php include 'footer.php'; ?>
+
 </body>
 </html>
