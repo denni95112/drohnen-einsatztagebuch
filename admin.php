@@ -147,6 +147,7 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
         die("Fehler beim Schreiben der Konfiguration");
     }
 }
+
 ?>
 
 <!DOCTYPE html>

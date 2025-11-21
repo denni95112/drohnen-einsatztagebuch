@@ -62,6 +62,10 @@ logs/
 uploads/*
 !uploads/.gitkeep
 
+# Cache-Verzeichnis
+cache/*
+!cache/.gitkeep
+
 # Konfigurations-Templates (config.php.example sollte committed werden)
 # config/config.php.example
 

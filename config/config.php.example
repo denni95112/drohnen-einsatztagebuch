@@ -15,5 +15,6 @@ return [
     // 'logo_path' => 'uploads/logo_filename.png',
     // 'path_to_dashboard_db' => 'path/to/dashboard.db',
     // 'dashboard_url' => 'https://your-dashboard-url.com',
+    // 'fake_new_version' => true, // Set to true to simulate a new version for debugging
 ];
 

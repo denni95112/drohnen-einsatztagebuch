@@ -67,6 +67,7 @@ h3 {
     justify-content: center;
     gap: 1rem;
     flex-wrap: wrap;
+    position: relative;
 }
 
 .header-logo {
@@ -86,6 +87,66 @@ h3 {
     text-align: center;
     flex: 1;
     min-width: 200px;
+}
+
+.version-notification {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    margin-left: auto;
+}
+
+.version-notification:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+    animation: ring 2s ease-in-out infinite;
+}
+
+.notification-badge {
+    background: #ef4444;
+    color: #fff;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@keyframes ring {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    10%, 30% {
+        transform: rotate(-10deg);
+    }
+    20%, 40% {
+        transform: rotate(10deg);
+    }
+    50% {
+        transform: rotate(0deg);
+    }
+}
+
+@media (max-width: 768px) {
+    .version-notification {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 768px) {
