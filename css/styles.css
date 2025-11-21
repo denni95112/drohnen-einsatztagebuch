@@ -38,17 +38,21 @@ h1 {
 }
 
 h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #2a5298;
-    margin: 1.5rem 0 1rem 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e3c72;
+    margin: 0 0 2rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
 }
 
 h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 1rem 0 0.75rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e3c72;
+    margin: 2rem 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
 }
 
 .page-header {
@@ -269,13 +273,33 @@ a.back-btn:active {
     transform: translateY(0);
 }
 
-form button {
+form button:not(.gps-btn):not(.btn-action-inline) {
     width: 100%;
     margin-top: 1rem;
 }
 
+.centered-btn {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.centered-btn button {
+    width: auto;
+    min-width: 200px;
+    margin-top: 0;
+}
+
 .btn-dashboard,
-.gps-btn,
+.gps-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+}
+
 .abschluss-link,
 .btn-back,
 .download-btn {
@@ -315,9 +339,9 @@ a.action-btn:hover {
 
 a.back-btn {
     display: block;
-    width: auto;
+    width: 100%;
     max-width: 300px;
-    margin: 2rem auto 0 auto;
+    margin: 2rem auto 2rem auto;
     text-align: center;
 }
 
@@ -335,6 +359,14 @@ form {
     gap: 1.25rem;
 }
 
+form:not(.panel form):not(.admin-form-item form) {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;
@@ -346,6 +378,20 @@ label {
     color: #2d3748;
     font-size: 0.95rem;
     margin-bottom: 0.25rem;
+    display: block;
+}
+
+label:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+label:has(input[type="checkbox"]):hover {
+    color: #667eea;
 }
 
 input[type="text"],
@@ -413,12 +459,39 @@ input[type="checkbox"] {
 .container,
 .quick-action,
 .success-message,
-.panel {
+.panel,
+.page-container {
     background: #fff;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    margin-bottom: 1.5rem;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.page-container {
+    max-width: 100%;
+    margin: 0 auto 2rem;
+}
+
+.container table {
+    margin-top: 1.5rem;
+}
+
+.container .form-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.container .form-group input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.container .form-group .btn-add {
+    width: auto;
+    min-width: 150px;
+    margin-top: 0;
 }
 
 .admin-sections {
@@ -694,6 +767,10 @@ input[type="checkbox"] {
 }
 
 table {
+    margin: 1.5rem 0;
+}
+
+table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
@@ -798,46 +875,230 @@ a:hover {
     min-width: 330px;
     display: inline-block;
     vertical-align: top;
+    background: #fff;
+    padding: 1.75rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin: 0 1rem 1.5rem 0;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.quick-action:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.quick-action strong {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: #1e3c72;
+    font-weight: 700;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.quick-action select,
+.quick-action input[type="text"] {
+    width: 100%;
+    margin-bottom: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.quick-action select:focus,
+.quick-action input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .quick-action img {
     cursor: pointer;
     width: 50px;
     height: 50px;
+    margin: 0.5rem 0.5rem 0.5rem 0;
+    transition: transform 0.2s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-.quick-action strong {
-    font-size: 1.125rem;
-    margin-bottom: 0.75rem;
-    display: block;
+.quick-action img:hover {
+    transform: scale(1.1);
+}
+
+.quick-action .flugdauer {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    font-weight: 600;
+    color: #2a5298;
+    font-size: 0.95rem;
 }
 
 .accordion {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+    color: #2d3748;
+    padding: 1rem 1.5rem;
     cursor: pointer;
     border: none;
     text-align: left;
-    margin-bottom: 0.75rem;
-    border-radius: 10px;
+    margin-bottom: 0;
+    border-radius: 0;
     font-weight: 600;
+    font-size: 1rem;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: none;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    border-right: 1px solid #cbd5e0;
+    border-top: 2px solid transparent;
 }
 
-.accordion:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.accordion:first-child {
+    border-top-left-radius: 12px;
+}
+
+.accordion:last-child {
+    border-top-right-radius: 12px;
+    border-right: none;
+}
+
+.accordion::after {
+    content: '▼';
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+    font-size: 0.75rem;
+    color: #667eea;
+}
+
+.accordion.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-top: 2px solid #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    z-index: 1;
+    position: relative;
+}
+
+.accordion.active::after {
+    transform: translateY(-50%) rotate(180deg);
+    color: #fff;
+}
+
+.accordion:hover:not(.active) {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    color: #667eea;
+}
+
+.accordion-tabs-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    margin-bottom: 0;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 2px solid #e2e8f0;
+    border-bottom: none;
+}
+
+.accordion-tabs-container + .panel {
+    border-top: none;
+    border-radius: 0;
+}
+
+.accordion-tabs-container + .panel.active {
+    border-radius: 0 0 12px 12px;
+}
+
+@media (max-width: 768px) {
+    .accordion-tabs-container {
+        flex-direction: column;
+    }
+    
+    .accordion {
+        flex: 1 1 100%;
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #cbd5e0;
+        border-radius: 0;
+    }
+    
+    .accordion:first-child {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+    
+    .accordion:last-child {
+        border-bottom: none;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    .accordion.active {
+        border-bottom: 1px solid #667eea;
+    }
+    
+    .accordion-tabs-container + .panel.active {
+        border-top: 2px solid #e2e8f0;
+        border-radius: 0 0 12px 12px;
+    }
 }
 
 .panel {
     display: none;
-    padding: 1.25rem;
+    padding: 1.75rem;
     border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
     background: #fff;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.panel.active {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.panel form {
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    margin-bottom: 0;
+}
+
+.panel label {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.panel label:hover {
+    color: #667eea;
 }
 
 .qr-container {

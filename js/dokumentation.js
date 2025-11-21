@@ -63,6 +63,34 @@ document.addEventListener("DOMContentLoaded", () => {
             clearInterval(flugdauerInterval);
         }
     });
+    
+    const accordionButtons = document.querySelectorAll('.accordion');
+    const container = document.querySelector('.accordion-tabs-container');
+    const panels = container ? Array.from(container.parentElement.querySelectorAll('.panel')) : [];
+    
+    accordionButtons.forEach((button, index) => {
+        if (index === 0 && panels[index]) {
+            button.classList.add('active');
+            panels[index].classList.add('active');
+        }
+        
+        button.addEventListener('click', function() {
+            const isCurrentlyActive = this.classList.contains('active');
+            
+            accordionButtons.forEach(otherButton => {
+                otherButton.classList.remove('active');
+            });
+            
+            panels.forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            if (!isCurrentlyActive && panels[index]) {
+                this.classList.add('active');
+                panels[index].classList.add('active');
+            }
+        });
+    });
 });
 
 function saveQuickData(element) {
@@ -263,14 +291,6 @@ function addEntryToTable(zeilennummer, zeitpunkt, text) {
     domCache.tbody.prepend(row);
 }
 
-document.querySelectorAll('.accordion').forEach(button => {
-    button.addEventListener('click', function() {
-        console.log("click")
-        this.classList.toggle('active');
-        const panel = this.nextElementSibling;
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-    });
-});
 
 function sortTable(columnIndex) {
     const table = document.getElementById("eintraegeTabelle");

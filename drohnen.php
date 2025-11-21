@@ -35,7 +35,7 @@ $drohnen = $db->query("SELECT id, name FROM drohnen ORDER BY name ASC")->fetchAl
 <div class="container">
     <h2>Drohnen-Verwaltung</h2>
 
-    <form method="post">
+    <form method="post" style="background: transparent; padding: 0; box-shadow: none; margin-bottom: 0;">
         <div class="form-group">
             <input type="text" name="name" placeholder="Name der Drohne" required>
             <button type="submit" name="add" class="btn-add">Hinzufügen</button>

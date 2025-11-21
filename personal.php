@@ -102,8 +102,10 @@ $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal
     <input type="number" name="dashboard_id" required placeholder="Dashboard ID" value="<?= htmlspecialchars($edit_personal['dashboard_id'] ?? '') ?>">
 
     <?php if($edit_personal): ?>
-        <button type="submit" name="update">Änderungen speichern</button>
-        <a href="personal.php">Abbrechen</a>
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" name="update" style="flex: 1;">Änderungen speichern</button>
+            <a href="personal.php" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);">Abbrechen</a>
+        </div>
     <?php else: ?>
         <button type="submit" name="add">Personal hinzufügen</button>
     <?php endif; ?>

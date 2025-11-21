@@ -88,7 +88,11 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
 <?php if (!$einsatz_abgeschlossen): ?>
 
-    <button class="accordion">Einsatznummer aktualisieren</button>
+    <div class="accordion-tabs-container">
+        <button class="accordion">Einsatznummer aktualisieren</button>
+        <button class="accordion">Anwesendes Personal aktualisieren</button>
+    </div>
+    
     <div class="panel">
         <form method="post">
             <input type="text" name="einsatznummer" value="<?= htmlspecialchars($einsatz['einsatznummer']) ?>" required>
@@ -96,7 +100,6 @@ $anwesendMap = array_flip($personal_anwesend_ids);
         </form>
     </div>
 
-    <button class="accordion">Anwesendes Personal aktualisieren</button>
     <div class="panel">
         <form method="post">
             <?php 

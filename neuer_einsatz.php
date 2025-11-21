@@ -115,12 +115,17 @@ $einsatzarten = ["Brandeinsatz", "Ölspur", "Öl auf Gewässer", "Personensuche"
         </select>
     </label>
 
-    <label>Anwesendes Personal:<br><br>
-        <?php foreach ($personal as $p): ?>
-            <input type="checkbox" name="personal[]" value="<?= $p['id'] ?>">
-            <?= htmlspecialchars($p['vorname'] . ' ' . $p['nachname']) ?><br><br>
-        <?php endforeach; ?>
-    </label>
+    <div style="margin-top: 0.5rem;">
+        <label style="margin-bottom: 1rem; display: block;">Anwesendes Personal:</label>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <?php foreach ($personal as $p): ?>
+                <label style="margin-bottom: 0;">
+                    <input type="checkbox" name="personal[]" value="<?= $p['id'] ?>">
+                    <?= htmlspecialchars($p['vorname'] . ' ' . $p['nachname']) ?>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </div>
 
     <div class="centered-btn">
         <button type="submit" name="einsatz_starten">Einsatz starten</button>
