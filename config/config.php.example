@@ -12,6 +12,7 @@ return [
     'domain' => 'your-domain.com',
     'database_path' => 'einsatzbuch.db',
     // Optional:
+    // 'logo_path' => 'uploads/logo_filename.png',
     // 'path_to_dashboard_db' => 'path/to/dashboard.db',
     // 'dashboard_url' => 'https://your-dashboard-url.com',
 ];

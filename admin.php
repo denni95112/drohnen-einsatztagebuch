@@ -90,6 +90,63 @@ if (isset($_POST['update_password'])) {
         die("Fehler beim Schreiben der Konfiguration");
     }
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+    $fileType = $_FILES['logo']['type'];
+    
+    if (in_array($fileType, $allowedTypes)) {
+        $uploadDir = __DIR__ . '/uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        if (!empty($config['logo_path']) && file_exists(__DIR__ . '/' . $config['logo_path'])) {
+            @unlink(__DIR__ . '/' . $config['logo_path']);
+        }
+        
+        $extension = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+        $fileName = 'logo_' . time() . '_' . uniqid() . '.' . $extension;
+        $filePath = $uploadDir . $fileName;
+        
+        if (move_uploaded_file($_FILES['logo']['tmp_name'], $filePath)) {
+            $config['logo_path'] = 'uploads/' . $fileName;
+            $tempPath = $configPath . '.tmp';
+            $configContent = "<?php\nreturn " . var_export($config, true) . ";\n";
+            if (file_put_contents($tempPath, $configContent) !== false) {
+                if (rename($tempPath, $configPath)) {
+                    header("Location: admin.php?success=logo_geaendert");
+                    exit;
+                } else {
+                    @unlink($tempPath);
+                    die("Fehler beim Speichern der Konfiguration");
+                }
+            } else {
+                die("Fehler beim Schreiben der Konfiguration");
+            }
+        }
+    }
+}
+
+if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
+    if (file_exists(__DIR__ . '/' . $config['logo_path'])) {
+        @unlink(__DIR__ . '/' . $config['logo_path']);
+    }
+    unset($config['logo_path']);
+    $tempPath = $configPath . '.tmp';
+    $configContent = "<?php\nreturn " . var_export($config, true) . ";\n";
+    if (file_put_contents($tempPath, $configContent) !== false) {
+        if (rename($tempPath, $configPath)) {
+            header("Location: admin.php?success=logo_geloescht");
+            exit;
+        } else {
+            @unlink($tempPath);
+            die("Fehler beim Speichern der Konfiguration");
+        }
+    } else {
+        die("Fehler beim Schreiben der Konfiguration");
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -115,7 +172,9 @@ if (isset($_POST['update_password'])) {
             "db_geloescht" => "Datenbankdatei gelöscht!",
             "db_neu_erstellt" => "Neue Datenbank angelegt!",
             "einheit_geaendert" => "Einheit erfolgreich geändert!",
-            "passwort_geaendert" => "Passwort wurde geändert!"
+            "passwort_geaendert" => "Passwort wurde geändert!",
+            "logo_geaendert" => "Logo erfolgreich hochgeladen!",
+            "logo_geloescht" => "Logo erfolgreich gelöscht!"
         ];
         echo $messages[$_GET['success']] ?? "Aktion erfolgreich!";
         ?>
@@ -162,6 +221,17 @@ if (isset($_POST['update_password'])) {
     <label>Neues Passwort:</label>
     <input type="password" name="admin_passwort" required>
     <button type="submit" name="update_password">Passwort ändern</button>
+</form>
+
+<!-- Logo hochladen/ändern -->
+<form method="post" enctype="multipart/form-data">
+    <label>Logo hochladen/ändern:</label>
+    <input type="file" name="logo" accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
+    <?php if (!empty($config['logo_path']) && file_exists(__DIR__ . '/' . $config['logo_path'])): ?>
+        <p>Aktuelles Logo: <img src="<?= htmlspecialchars($config['logo_path']) ?>" alt="Logo" style="max-height: 40px; vertical-align: middle;"></p>
+        <button type="submit" name="delete_logo" class="danger" onclick="return confirm('Logo wirklich löschen?')">Logo löschen</button>
+    <?php endif; ?>
+    <button type="submit">Logo hochladen</button>
 </form>
 
 <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
