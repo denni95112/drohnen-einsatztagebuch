@@ -20,6 +20,16 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
 - **GPS-Integration**: Automatische Adressermittlung über GPS-Koordinaten
 - **Automatische Bibliotheksinstallation**: Automatischer Download und Installation benötigter Bibliotheken
 
+## Screenshots
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/51af15f9-aebf-4c76-beab-a5310547c811" width="150" />
+  <img src="https://github.com/user-attachments/assets/520e179d-4729-4474-9a41-bb8f0b0db9f0" width="150" />
+  <img src="https://github.com/user-attachments/assets/ee7cdb43-079c-41d1-919b-7f4806e8962b" width="150" />
+  <img src="https://github.com/user-attachments/assets/d84bdc43-6c8d-4f1f-a25e-f192124108a1" width="150" />
+  <img src="https://github.com/user-attachments/assets/380f5333-9a6c-4020-addc-4daf425d1110" width="150" />
+  <img src="https://github.com/user-attachments/assets/efe93dec-3e50-4021-addc-57181499f16f" width="150" />
+</p>
+
 ## 🚀 Installation
 
 ### Voraussetzungen
