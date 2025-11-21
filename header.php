@@ -21,4 +21,42 @@ $versionUpdate = checkForNewVersion($currentVersion, $config);
         <?php endif; ?>
     </div>
 </header>
+<script>
+(function() {
+    function adjustHeaderLogo() {
+        const headerTitle = document.querySelector('.page-header h1');
+        const headerLogo = document.querySelector('.header-logo');
+        
+        if (!headerTitle || !headerLogo) return;
+        
+        const titleHeight = headerTitle.scrollHeight;
+        const lineHeight = parseFloat(getComputedStyle(headerTitle).lineHeight);
+        const isTwoLines = titleHeight > lineHeight * 1.5;
+        
+        if (isTwoLines) {
+            headerLogo.classList.add('scaled');
+        } else {
+            headerLogo.classList.remove('scaled');
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', adjustHeaderLogo);
+    } else {
+        adjustHeaderLogo();
+    }
+    
+    window.addEventListener('resize', adjustHeaderLogo);
+    
+    const headerTitle = document.querySelector('.page-header h1');
+    if (headerTitle) {
+        const observer = new MutationObserver(adjustHeaderLogo);
+        observer.observe(headerTitle, { 
+            childList: true, 
+            characterData: true, 
+            subtree: true 
+        });
+    }
+})();
+</script>
 

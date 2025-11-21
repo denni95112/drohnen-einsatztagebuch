@@ -80,17 +80,31 @@ h3 {
     width: auto;
     height: auto;
     object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.header-logo.scaled {
+    max-height: 45px;
+    max-width: 90px;
 }
 
 .page-header h1 {
     margin: 0;
     color: #fff;
-    font-size: 2rem;
+    font-size: clamp(1.25rem, 4vw, 2rem);
     font-weight: 700;
     letter-spacing: -0.5px;
     text-align: center;
     flex: 1;
     min-width: 200px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: calc(1.2em * 2);
 }
 
 .version-notification {
@@ -163,6 +177,11 @@ h3 {
         max-height: 50px;
         max-width: 100px;
     }
+    
+    .header-logo.scaled {
+        max-height: 38px;
+        max-width: 75px;
+    }
 
     .page-header h1 {
         font-size: 1.75rem;
@@ -178,6 +197,11 @@ h3 {
     .header-logo {
         max-height: 40px;
         max-width: 80px;
+    }
+    
+    .header-logo.scaled {
+        max-height: 30px;
+        max-width: 60px;
     }
 
     .page-header h1 {
