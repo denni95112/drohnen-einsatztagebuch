@@ -160,6 +160,10 @@ Die Konfiguration erfolgt über `config/config.php`, die beim ersten Setup erste
 - **QR-Code**: phpqrcode
 - **Frontend**: Vanilla JavaScript, CSS3
 
+## Verwandte Projekte
+
+Dieses Projekt kann zusammen mit dem **[Drohnen-Flug-und-Dienstbuch]([https://github.com/denni95112/drohnen-einsatztagebuch](https://github.com/denni95112/drohnen-flug-und-dienstbuch))** verwendet werden. Das Drohnen-Flug-und-Dienstbuch bietet zusätzliche Funktionen zur Dokumentation von Drohnen Flügen, Einsätzen und Diensten.
+
 ## 📝 Lizenz
 
 Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) Datei für Details.
