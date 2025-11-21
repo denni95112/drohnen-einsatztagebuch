@@ -62,6 +62,7 @@ $letzter_einsatz = $stmt->fetchColumn();
         <a href="admin.php" class="btn">Administration</a>
     <?php endif; ?>
     <a href="logout.php" class="btn">Logout</a>
+    <br><br>
 </div>
 
 <?php include 'footer.php'; ?>
