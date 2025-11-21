@@ -74,29 +74,55 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
 
 ```
 drohnen-einsatztagebuch/
-├── config/              # Konfigurationsdateien
-│   └── config.php       # Hauptkonfiguration (wird beim Setup erstellt)
-├── css/                 # Stylesheets
-│   ├── index.css
-│   ├── login.css
-│   ├── setup.css
-│   └── ...
-├── js/                  # JavaScript-Dateien
-│   ├── dokumentation.js
-│   ├── einsatzliste.js
-│   └── ...
-├── img/                 # Bilder und Icons
-├── lib/                 # Externe Bibliotheken (dompdf, phpqrcode)
-├── admin.php            # Administrationsbereich
-├── auth.php             # Authentifizierung
-├── db.php               # Datenbankverbindung und Schema
-├── dokumentation.php     # Einsatzdokumentation
-├── einsatz_abschluss.php # PDF-Generierung
-├── index.php            # Hauptübersicht
-├── login.php            # Login-Seite
-├── neuer_einsatz.php    # Neuen Einsatz starten
-├── setup.php            # Erstkonfiguration
-└── utils.php            # Utility-Funktionen
+├── config/                    # Konfigurationsdateien
+│   ├── config.php              # Hauptkonfiguration (wird beim Setup erstellt)
+│   └── config.php.example      # Beispielkonfiguration
+├── css/                        # Stylesheets
+│   ├── drohnen.css             # Styling für Drohnenverwaltung
+│   ├── einsatzliste.css        # Styling für Einsatzliste
+│   ├── index.css               # Styling für Hauptübersicht
+│   ├── login.css               # Styling für Login-Seite
+│   ├── personal.css            # Styling für Personalverwaltung
+│   ├── setup.css               # Styling für Setup-Seite
+│   └── styles.css              # Globale Styles
+├── js/                         # JavaScript-Dateien
+│   ├── dokumentation.js        # Funktionen für Einsatzdokumentation
+│   ├── einsatzliste.js         # Funktionen für Einsatzliste
+│   ├── neuer_einsatz.js        # Funktionen für neuen Einsatz
+│   ├── read_only.js            # Funktionen für Lese-Modus
+│   └── setup.js                # Funktionen für Setup
+├── img/                        # Bilder und Icons
+│   ├── flugzeug_landung.png    # Icon für Landung
+│   ├── flugzeug_start.png      # Icon für Start
+│   ├── personensuche.png       # Icon für Personensuche
+│   └── warnung.png             # Icon für Warnung
+├── lib/                        # Externe Bibliotheken
+│   ├── dompdf/                 # PDF-Generierung
+│   └── phpqrcode/              # QR-Code-Generierung
+├── uploads/                    # Hochgeladene Dateien (z.B. Logos)
+├── cache/                      # Cache-Dateien (z.B. für Version-Checks)
+├── admin.php                   # Administrationsbereich
+├── ajax_insert.php             # AJAX-Endpoint für Einträge
+├── ajax_read_only.php          # AJAX-Endpoint für Lese-Modus
+├── auth.php                    # Authentifizierung
+├── db.php                      # Datenbankverbindung und Schema
+├── dokumentation.php           # Einsatzdokumentation
+├── drohnen.php                 # Drohnenverwaltung
+├── einsatz_abschluss.php       # PDF-Generierung
+├── einsatzliste.php            # Einsatzliste
+├── footer.php                  # Wiederverwendbare Footer-Komponente
+├── header.php                  # Wiederverwendbare Header-Komponente
+├── index.php                   # Hauptübersicht
+├── insert_flight.php           # Flugdaten einfügen
+├── login.php                   # Login-Seite
+├── logout.php                  # Logout-Funktion
+├── neuer_einsatz.php           # Neuen Einsatz starten
+├── personal.php                # Personalverwaltung
+├── qr_generate.php             # QR-Code-Generierung
+├── read_only.php               # Lese-Modus
+├── setup.php                   # Erstkonfiguration
+├── utils.php                   # Utility-Funktionen
+└── version_check.php           # Version-Check für GitHub-Releases
 ```
 
 ## 🔧 Konfiguration
