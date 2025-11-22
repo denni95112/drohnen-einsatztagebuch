@@ -526,15 +526,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
     $logo_path = '';
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
-        $fileType = $_FILES['logo']['type'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
+        $fileType = $_FILES['logo']['type'] ?? '';
+        $extension = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
         
-        if (in_array($fileType, $allowedTypes)) {
+        // Check both MIME type and file extension for better compatibility
+        if ((in_array($fileType, $allowedTypes) || empty($fileType)) && in_array($extension, $allowedExtensions)) {
             $uploadDir = __DIR__ . '/uploads/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
             
-            $extension = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
             $fileName = 'logo_' . time() . '_' . uniqid() . '.' . $extension;
             $filePath = $uploadDir . $fileName;
             
@@ -586,6 +588,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
         "    'domain' => '" . addslashes($domain) . "',\n" .
         "    'database_path' => '" . $database_path_escaped . "',\n";
     
+    // Add logo_path if it was uploaded and saved successfully
     if (!empty($logo_path)) {
         $config .= "    'logo_path' => '" . addslashes($logo_path) . "',\n";
     }
@@ -653,19 +656,15 @@ $missingLibraries = checkLibraries();
         <label>Einheit (z. B. Feuerwehr, Drohnengruppe, etc.):<br>
             <input type="text" name="einheit" required>
         </label>
-        <br><br>
         <label>Ort:<br>
             <input type="text" name="ort" required>
         </label>
-        <br><br>
         <label>Passwort für Login:<br>
             <input type="password" name="passwort" required>
         </label>
-        <br><br>
         <label>Passwort für Admin Login:<br>
             <input type="password" name="admin_passwort" required>
         </label>
-        <br><br>
         <label>
             Datenbank-Pfad
             <span class="tooltip">?
@@ -698,7 +697,7 @@ $missingLibraries = checkLibraries();
                 Betriebssystem erkannt: Linux/Unix
             <?php endif; ?>
         </small>
-        <br><br>
+        <br>
         <label>
             Pfad zur Flug Dashboard Datenbank (optional)
             <span class="tooltip">?
@@ -708,7 +707,7 @@ $missingLibraries = checkLibraries();
             </span>
         </label>
         <input type="text" name="path_to_dashboard_db" placeholder="z.B. C:/data/dashboard-database.sqlite oder leer lassen">
-        <br><br>
+        <br>
         <label>
             Flug Dashboard URL (optional)
             <span class="tooltip">?
@@ -718,7 +717,7 @@ $missingLibraries = checkLibraries();
             </span>
         </label>
         <input type="url" name="dashboard_url" placeholder="z.B. https://example.com/dashboard oder leer lassen">
-        <br><br>
+        <br>
         <label>
             Logo hochladen (optional)
             <span class="tooltip">?
@@ -729,7 +728,7 @@ $missingLibraries = checkLibraries();
         </label>
         <input type="file" name="logo" accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
         <small>Optional: Logo wird links neben dem Titel angezeigt</small>
-        <br><br>
+        <br>
 
         <button type="submit" name="submit_config" id="submitConfigBtn" <?= !empty($missingLibraries) ? 'disabled' : '' ?>>
             Konfiguration abschließen
