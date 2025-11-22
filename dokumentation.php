@@ -1,4 +1,5 @@
 <?php
+require_once 'utils.php';
 require_once 'db.php';
 require 'auth.php';
 requireAuth();
@@ -87,7 +88,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Einsatz-Dokumentation</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
 
 </head>
 <body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>" data-dashboard-enabled="<?= $dashboardEnabled ? '1' : '0' ?>">

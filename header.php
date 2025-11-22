@@ -3,6 +3,7 @@ if (!isset($config)) {
     $config = include __DIR__ . '/config/config.php';
 }
 
+require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/version_check.php';
 $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
 $versionUpdate = checkForNewVersion($currentVersion, $config);

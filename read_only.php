@@ -1,4 +1,5 @@
 <?php
+require_once 'utils.php';
 require_once 'db.php';
 $config = include __DIR__ . '/config/config.php';
 
@@ -25,7 +26,7 @@ $einsatz = $stmt->fetch(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>Einsatz-Dokumentation Lesemodus</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
 
 </head>
 <body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>">

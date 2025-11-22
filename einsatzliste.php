@@ -1,4 +1,5 @@
 <?php
+require_once 'utils.php';
 require_once 'db.php';
 require 'auth.php';
 requireAdminAuth();
@@ -14,8 +15,8 @@ $einsaetze = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Einsatzliste - Einsatztagebuch</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/einsatzliste.css">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/einsatzliste.css') ?>">
 </head>
 <body>
 

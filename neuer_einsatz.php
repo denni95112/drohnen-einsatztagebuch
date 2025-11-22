@@ -1,4 +1,5 @@
 <?php
+require_once 'utils.php';
 require 'db.php';
 require 'auth.php';
 requireAuth();
@@ -70,7 +71,7 @@ $einsatzarten = ["Brandeinsatz", "Ölspur", "Öl auf Gewässer", "Personensuche"
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neuer Einsatz starten</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
     <script src="js/neuer_einsatz.js"></script>
 </head>
 <body>

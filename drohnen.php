@@ -1,4 +1,5 @@
 <?php
+require_once 'utils.php';
 require_once 'db.php';
 require 'auth.php';
 requireAdminAuth();
@@ -25,8 +26,8 @@ $drohnen = $db->query("SELECT id, name FROM drohnen ORDER BY name ASC")->fetchAl
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drohnen-Verwaltung</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/drohnen.css">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/drohnen.css') ?>">
 </head>
 <body>
 

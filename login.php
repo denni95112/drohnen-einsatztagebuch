@@ -1,4 +1,5 @@
 <?php
+require_once 'utils.php';
 $config = include __DIR__ . '/config/config.php';
 session_start();
 $error = '';
@@ -29,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?php echo $config['navigation_title'] ?></title>
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/login.css') ?>">
 </head>
 <body>
     <div class="login-container">

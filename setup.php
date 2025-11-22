@@ -251,6 +251,8 @@ function checkLibraries() {
         
         return ['success' => true];
     }
+
+require_once 'utils.php';
     
 /**
  * Recursively remove a directory and its contents
@@ -596,6 +598,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
         $config .= "    'dashboard_url' => '" . $dashboard_url_escaped . "',\n";
     }
     
+    $config .= "    'version' => '1.0.0',\n";
     $config .= "];\n";
 
     if (!is_dir(__DIR__ . '/config')) {
@@ -619,7 +622,7 @@ $missingLibraries = checkLibraries();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup Einsatztagebuch</title>
-    <link rel="stylesheet" href="css/setup.css">
+    <link rel="stylesheet" href="<?= getVersionedAsset('css/setup.css') ?>">
     <script src="js/setup.js"></script>
 </head>
 <body>
