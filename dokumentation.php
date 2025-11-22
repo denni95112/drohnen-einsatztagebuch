@@ -3,6 +3,14 @@ require_once 'db.php';
 require 'auth.php';
 requireAuth();
 
+// Load config to check if path_to_dashboard_db is set
+$configPath = __DIR__ . '/config/config.php';
+$config = [];
+if (file_exists($configPath)) {
+    $config = require $configPath;
+}
+$dashboardEnabled = !empty($config['path_to_dashboard_db']);
+
 if (!isset($_GET['einsatz_id'])) {
     die("Keine Einsatz-ID angegeben.");
 }
@@ -82,7 +90,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
     <link rel="stylesheet" href="css/styles.css">
 
 </head>
-<body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>">
+<body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>" data-dashboard-enabled="<?= $dashboardEnabled ? '1' : '0' ?>">
 <?php include 'header.php'; ?>
 <h2>Einsatz-Dokumentation (#<?= htmlspecialchars($einsatz['einsatznummer']) ?>)</h2>
 

@@ -3,6 +3,14 @@ require_once 'db.php';
 require 'auth.php';
 requireAdminAuth();
 
+// Load config to check if path_to_dashboard_db is set
+$configPath = __DIR__ . '/config/config.php';
+$config = [];
+if (file_exists($configPath)) {
+    $config = require $configPath;
+}
+$dashboardEnabled = !empty($config['path_to_dashboard_db']);
+
 try {
 if(isset($_POST['add'])){
     $vorname = $_POST['vorname'] ?? '';
@@ -99,7 +107,11 @@ $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal
 
     <input type="text" name="nachname" required placeholder="Nachname" value="<?= htmlspecialchars($edit_personal['nachname'] ?? '') ?>">
 
+    <?php if ($dashboardEnabled): ?>
     <input type="number" name="dashboard_id" required placeholder="Dashboard ID" value="<?= htmlspecialchars($edit_personal['dashboard_id'] ?? '') ?>">
+    <?php else: ?>
+    <input type="number" name="dashboard_id" placeholder="Dashboard ID (optional)" value="<?= htmlspecialchars($edit_personal['dashboard_id'] ?? '') ?>">
+    <?php endif; ?>
 
     <?php if($edit_personal): ?>
         <div style="display: flex; gap: 1rem;">
@@ -117,7 +129,9 @@ $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal
             <th>ID</th>
             <th>Vorname</th>
             <th>Nachname</th>
+            <?php if ($dashboardEnabled): ?>
             <th>Dashboard ID</th>
+            <?php endif; ?>
             <th>Aktionen</th>
         </tr>
     </thead>
@@ -127,7 +141,9 @@ $personal = $db->query("SELECT id, vorname, nachname, dashboard_id FROM personal
                 <td><?= htmlspecialchars($p['id']) ?></td>
                 <td><?= htmlspecialchars($p['vorname']) ?></td>
                 <td><?= htmlspecialchars($p['nachname']) ?></td>
+                <?php if ($dashboardEnabled): ?>
                 <td><?= htmlspecialchars($p['dashboard_id']) ?></td>
+                <?php endif; ?>
                 <td>
                     <a href="?edit=<?= $p['id'] ?>" class="action-btn">Bearbeiten</a>
                     <a href="?delete=<?= $p['id'] ?>" class="action-btn delete-btn" onclick="return confirm('Wirklich löschen?')">Löschen</a>

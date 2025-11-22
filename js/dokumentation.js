@@ -1,4 +1,5 @@
 const einsatzId = parseInt(document.body.getAttribute('data-einsatz-id'));
+const dashboardEnabled = document.body.getAttribute('data-dashboard-enabled') === '1';
 
 function getPilot(element) {
     return element.parentNode.querySelector('.pilot').value;
@@ -159,37 +160,40 @@ function toggleFlight(img) {
         delete drohnenData[id];
         localStorage.removeItem(`einsatz_${einsatzId}_drohne_${id}_startzeit`);
 
-        const data = {
-            pilot: pilot,
-            copilot: copilot,
-            drone_id: id,
-            battery_number: parseInt(akku) || 0,
-            flight_start: new Date(start).toISOString(),
-            flight_end: new Date(now).toISOString(),
-            location_id: location_id
-        };
+        // Only call insert_flight.php if dashboard is enabled
+        if (dashboardEnabled) {
+            const data = {
+                pilot: pilot,
+                copilot: copilot,
+                drone_id: id,
+                battery_number: parseInt(akku) || 0,
+                flight_start: new Date(start).toISOString(),
+                flight_end: new Date(now).toISOString(),
+                location_id: location_id
+            };
 
-        fetch('insert_flight.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(result => {
-            if (result.error) {
-                console.error('Flight insert error:', result.error);
-            } else {
-                console.log('Flight inserted:', result.message || result);
-            }
-        })
-        .catch(error => {
-            console.error('Error inserting flight:', error);
-        });
+            fetch('insert_flight.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.error) {
+                    console.error('Flight insert error:', result.error);
+                } else {
+                    console.log('Flight inserted:', result.message || result);
+                }
+            })
+            .catch(error => {
+                console.error('Error inserting flight:', error);
+            });
+        }
     }
 
     insertQuickText(text);
