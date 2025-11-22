@@ -322,6 +322,10 @@ form button:not(.gps-btn):not(.btn-action-inline) {
     width: 100%;
     padding: 0.75rem 1.5rem;
     font-size: 0.95rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .abschluss-link,
@@ -337,6 +341,32 @@ form button:not(.gps-btn):not(.btn-action-inline) {
 .btn-back:hover,
 .download-btn:hover {
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.gps-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.gps-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.gps-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .danger,

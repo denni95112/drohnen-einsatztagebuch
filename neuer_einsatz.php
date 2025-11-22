@@ -83,7 +83,10 @@ $einsatzarten = ["Brandeinsatz", "Ölspur", "Öl auf Gewässer", "Personensuche"
 
     <label>Adresse des Einsatzortes:
         <input type="text" name="adresse" id="adresse" required>
-        <button type="button" class="gps-btn" onclick="getAddress()">Adresse per GPS ermitteln</button>
+        <button type="button" class="gps-btn" id="gps-btn" onclick="getAddress()">
+            <span id="gps-btn-text">Adresse per GPS ermitteln</span>
+            <span id="gps-spinner" class="gps-spinner" style="display: none;"></span>
+        </button>
     </label>
 
     <input type="hidden" id="gps_lat" name="gps_lat">
