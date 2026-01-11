@@ -241,6 +241,18 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
         </form>
     </div>
 
+    <!-- Update Tool -->
+    <div class="admin-section">
+        <h3>🔄 Update Tool</h3>
+        <p>Prüfen Sie auf neue Versionen und aktualisieren Sie die Anwendung direkt über die Website.</p>
+        <div class="admin-actions">
+            <a href="updater/updater_page.php" class="btn-action" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <span class="action-icon">🔄</span>
+                <span>Update Tool öffnen</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Logo Verwaltung -->
     <div class="admin-section">
         <h3>🖼️ Logo Verwaltung</h3>
