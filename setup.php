@@ -601,7 +601,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
         $config .= "    'dashboard_url' => '" . $dashboard_url_escaped . "',\n";
     }
     
-    $config .= "    'version' => '1.0.0',\n";
     $config .= "];\n";
 
     if (!is_dir(__DIR__ . '/config')) {

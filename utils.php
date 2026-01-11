@@ -27,12 +27,13 @@ function getVersionedAsset($path) {
     static $version = null;
     
     if ($version === null) {
-        $configPath = __DIR__ . '/config/config.php';
-        $config = [];
-        if (file_exists($configPath)) {
-            $config = require $configPath;
+        if (!defined('APP_VERSION')) {
+            $versionPath = __DIR__ . '/includes/version.php';
+            if (file_exists($versionPath)) {
+                require_once $versionPath;
+            }
         }
-        $version = isset($config['version']) ? $config['version'] : '1.0.0';
+        $version = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
     }
     
     $separator = strpos($path, '?') !== false ? '&' : '?';

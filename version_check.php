@@ -10,14 +10,6 @@ function checkForNewVersion($currentVersion, $config) {
     $cacheFile = __DIR__ . '/cache/version_check.json';
     $cacheTime = 3600;
     
-    if (isset($config['fake_new_version']) && $config['fake_new_version']) {
-        return [
-            'new_version' => '2.0.0',
-            'url' => 'https://github.com/denni95112/drohnen-einsatztagebuch/releases/latest',
-            'fake' => true
-        ];
-    }
-    
     $cacheData = null;
     if (file_exists($cacheFile)) {
         $cacheData = json_decode(file_get_contents($cacheFile), true);
@@ -41,17 +33,39 @@ function checkForNewVersion($currentVersion, $config) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_USERAGENT, 'Drohnen-Einsatztagebuch');
     curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Accept: application/vnd.github.v3+json'
+    ]);
     
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    $curlErrno = curl_errno($ch);
+    
+    // If SSL verification failed, retry without verification (less secure but works)
+    if ($response === false && ($curlErrno === CURLE_SSL_CACERT || $curlErrno === CURLE_SSL_PEER_CERTIFICATE || 
+        strpos($curlError, 'SSL') !== false || strpos($curlError, 'certificate') !== false)) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+    }
+    
     curl_close($ch);
     
     if ($httpCode !== 200 || !$response) {
-        return $cacheData ? ($cacheData['new_version'] ? [
-            'new_version' => $cacheData['new_version'],
-            'url' => $cacheData['url'] ?? 'https://github.com/denni95112/drohnen-einsatztagebuch/releases/latest'
-        ] : null) : null;
+        // If API call failed and we have cached data, return it
+        if ($cacheData && isset($cacheData['new_version']) && $cacheData['new_version']) {
+            return [
+                'new_version' => $cacheData['new_version'],
+                'url' => $cacheData['url'] ?? 'https://github.com/denni95112/drohnen-einsatztagebuch/releases/latest'
+            ];
+        }
+        return null;
     }
     
     $data = json_decode($response, true);

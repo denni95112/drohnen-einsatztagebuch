@@ -5,6 +5,7 @@ if (!isset($config)) {
 
 require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/includes/csrf.php';
+require_once __DIR__ . '/includes/version.php';
 require_once __DIR__ . '/version_check.php';
 
 // Initialize config option for existing installations
@@ -53,8 +54,25 @@ if (isset($config['ask_for_install_notification']) && $config['ask_for_install_n
             <img src="<?= htmlspecialchars($logoPath) ?>" alt="Logo" class="header-logo">
         <?php endif; ?>
         <h1>Einsatztagebuch <?php echo htmlspecialchars($config['navigation_title']) ?></h1>
-        <?php if ($versionUpdate): ?>
-            <a href="<?= htmlspecialchars($versionUpdate['url']) ?>" target="_blank" class="version-notification" title="Neue Version <?= htmlspecialchars($versionUpdate['new_version']) ?> verfügbar!">
+        <?php if ($versionUpdate): 
+            // Determine if user is admin and set appropriate link
+            $isAdminForLink = false;
+            if (function_exists('isAdminAuthenticated')) {
+                $isAdminForLink = isAdminAuthenticated();
+            }
+            
+            if ($isAdminForLink) {
+                // Admin: link to updater tool
+                $updaterPath = $logoBasePath . 'updater/updater_page.php';
+                $notificationUrl = $updaterPath;
+                $notificationTarget = '';
+            } else {
+                // Non-admin: link to GitHub
+                $notificationUrl = $versionUpdate['url'];
+                $notificationTarget = ' target="_blank"';
+            }
+        ?>
+            <a href="<?= htmlspecialchars($notificationUrl) ?>"<?= $notificationTarget ?> class="version-notification" title="Neue Version <?= htmlspecialchars($versionUpdate['new_version']) ?> verfügbar!">
                 <span class="notification-icon">🔔</span>
                 <span class="notification-badge">Neu</span>
             </a>
