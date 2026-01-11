@@ -762,7 +762,7 @@ class Updater {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'User-Agent: Drohnen-Flug-und-Dienstbuch-Updater',
+                'User-Agent: Drohnen-Einsatztagebuch-Updater',
                 'Accept: application/vnd.github.v3+json'
             ]);
             curl_setopt($ch, CURLOPT_TIMEOUT, 300);
@@ -799,7 +799,7 @@ class Updater {
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        'User-Agent: Drohnen-Flug-und-Dienstbuch-Updater',
+                        'User-Agent: Drohnen-Einsatztagebuch-Updater',
                         'Accept: application/vnd.github.v3+json'
                     ]);
                     curl_setopt($ch, CURLOPT_TIMEOUT, 300);
@@ -840,7 +840,7 @@ class Updater {
                 'http' => [
                     'method' => 'GET',
                     'header' => [
-                        'User-Agent: Drohnen-Flug-und-Dienstbuch-Updater',
+                        'User-Agent: Drohnen-Einsatztagebuch-Updater',
                         'Accept: application/vnd.github.v3+json'
                     ],
                     'timeout' => 300
@@ -864,7 +864,7 @@ class Updater {
                     'http' => [
                         'method' => 'GET',
                         'header' => [
-                            'User-Agent: Drohnen-Flug-und-Dienstbuch-Updater',
+                            'User-Agent: Drohnen-Einsatztagebuch-Updater',
                             'Accept: application/vnd.github.v3+json'
                         ],
                         'timeout' => 300

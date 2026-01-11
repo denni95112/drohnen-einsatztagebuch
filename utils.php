@@ -39,3 +39,60 @@ function getVersionedAsset($path) {
     return $path . $separator . 'v=' . urlencode($version);
 }
 
+/**
+ * Update a config value in the config file
+ * @param string $key Config key to update
+ * @param mixed $value New value
+ * @return bool Success status
+ */
+function updateConfig($key, $value) {
+    $configFile = __DIR__ . '/config/config.php';
+    if (!file_exists($configFile)) {
+        return false;
+    }
+    
+    // Read current config
+    $config = include $configFile;
+    if (!is_array($config)) {
+        return false;
+    }
+    
+    // Update the value
+    $config[$key] = $value;
+    
+    // Write back to file, preserving structure
+    $content = "<?php\nreturn [\n";
+    
+    foreach ($config as $k => $v) {
+        if (is_array($v)) {
+            $content .= "    '{$k}' => [\n";
+            foreach ($v as $subKey => $subValue) {
+                $subValueEscaped = addslashes($subValue);
+                $content .= "        '{$subKey}' => '{$subValueEscaped}',\n";
+            }
+            $content .= "    ],\n";
+        } elseif (is_bool($v)) {
+            $content .= "    '{$k}' => " . ($v ? 'true' : 'false') . ",\n";
+        } elseif (is_numeric($v) && !is_string($v)) {
+            $content .= "    '{$k}' => {$v},\n";
+        } else {
+            $vEscaped = addslashes($v);
+            $content .= "    '{$k}' => '{$vEscaped}',\n";
+        }
+    }
+    
+    $content .= "];\n";
+    
+    // Create backup before writing
+    $backupFile = $configFile . '.backup.' . time();
+    @copy($configFile, $backupFile);
+    
+    $result = file_put_contents($configFile, $content) !== false;
+    
+    // Remove backup if write was successful
+    if ($result) {
+        @unlink($backupFile);
+    }
+    
+    return $result;
+}
