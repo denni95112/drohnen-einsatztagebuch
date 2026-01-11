@@ -32,24 +32,11 @@ if (isset($config['ask_for_install_notification']) && $config['ask_for_install_n
 <header class="page-header">
     <div class="header-content">
         <?php 
-        // Determine base path for logo (works from root and subdirectories)
-        // Get the directory of the current script relative to document root
-        $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
-        $logoBasePath = '';
+        // Simple path handling: if script is in updater directory, use ../ prefix
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $basePath = (strpos($scriptName, '/updater/') !== false || strpos($scriptName, '\\updater\\') !== false) ? '../' : '';
         
-        // If script is in a subdirectory (not root), add ../ for each level
-        if ($scriptDir !== '/' && $scriptDir !== '\\' && $scriptDir !== '.') {
-            // Normalize path separators
-            $scriptDir = str_replace('\\', '/', $scriptDir);
-            $scriptDir = trim($scriptDir, '/');
-            if (!empty($scriptDir)) {
-                // Count directory depth
-                $depth = substr_count($scriptDir, '/') + 1;
-                $logoBasePath = str_repeat('../', $depth);
-            }
-        }
-        
-        $logoPath = $logoBasePath . ($config['logo_path'] ?? '');
+        $logoPath = !empty($config['logo_path']) ? ($basePath . $config['logo_path']) : '';
         if (!empty($config['logo_path']) && file_exists(__DIR__ . '/' . $config['logo_path'])): ?>
             <img src="<?= htmlspecialchars($logoPath) ?>" alt="Logo" class="header-logo">
         <?php endif; ?>
@@ -63,8 +50,7 @@ if (isset($config['ask_for_install_notification']) && $config['ask_for_install_n
             
             if ($isAdminForLink) {
                 // Admin: link to updater tool
-                $updaterPath = $logoBasePath . 'updater/updater_page.php';
-                $notificationUrl = $updaterPath;
+                $notificationUrl = $basePath . 'updater/updater_page.php';
                 $notificationTarget = '';
             } else {
                 // Non-admin: link to GitHub
