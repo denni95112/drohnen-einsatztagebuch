@@ -29,6 +29,13 @@ $currentVersion = APP_VERSION;
 $updateInfo = null;
 $error = null;
 
+// Check requirements
+$requirements = $updater->checkRequirements();
+$requirementsError = null;
+if (!$requirements['available']) {
+    $requirementsError = $updater->getRequirementErrorMessage($requirements['missing']);
+}
+
 // Try to check for updates on page load (non-blocking)
 try {
     $updateInfo = $updater->checkForUpdates();
@@ -57,6 +64,17 @@ try {
         
         <!-- Success message container -->
         <div id="success-message-container" class="success-message" style="display: none;"></div>
+        
+        <?php if ($requirementsError): ?>
+        <!-- Requirements Warning -->
+        <div class="error-message" style="display: block; margin-bottom: 2rem;">
+            <strong>⚠️ Systemanforderungen:</strong><br>
+            <p style="margin: 0.5rem 0;">Erforderliche PHP-Extension fehlt. Bitte installieren Sie die fehlende Extension, bevor Sie Updates durchführen können.</p>
+            <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem; max-height: 400px; overflow-y: auto;">
+                <?php echo nl2br(htmlspecialchars($requirementsError, ENT_QUOTES, 'UTF-8')); ?>
+            </div>
+        </div>
+        <?php endif; ?>
         
         <div class="updater-container">
             <!-- Current Version Section -->

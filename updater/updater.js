@@ -305,7 +305,12 @@
     function showError(message) {
         hideMessages();
         if (errorContainer) {
-            errorContainer.textContent = message;
+            // Preserve line breaks for multiline error messages
+            if (message && message.includes('\n')) {
+                errorContainer.innerHTML = message.replace(/\n/g, '<br>');
+            } else {
+                errorContainer.textContent = message;
+            }
             errorContainer.style.display = 'block';
         }
     }

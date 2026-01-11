@@ -247,6 +247,16 @@ class Updater {
         $extractPath = null;
         
         try {
+            // Check requirements first
+            $requirements = $this->checkRequirements();
+            if (!$requirements['available']) {
+                $errorMsg = $this->getRequirementErrorMessage($requirements['missing']);
+                $this->log('Requirements check failed', 'ERROR', [
+                    'missing' => $requirements['missing']
+                ]);
+                throw new Exception($errorMsg);
+            }
+            
             // Validate version
             if (!$this->validateVersion($version)) {
                 throw new Exception('Invalid version format: ' . $version);
@@ -903,5 +913,177 @@ class Updater {
         $version = ltrim($version, 'v');
         // Match semantic versioning: x.y.z
         return preg_match('/^\d+\.\d+\.\d+$/', $version) === 1;
+    }
+    
+    /**
+     * Check if required PHP extensions are available
+     * @return array Array with 'available' => bool and 'missing' => array of missing extensions
+     */
+    public function checkRequirements(): array {
+        $required = ['zip']; // Required extension for ZIP extraction
+        $missing = [];
+        
+        foreach ($required as $ext) {
+            if (!extension_loaded($ext)) {
+                $missing[] = $ext;
+            }
+        }
+        
+        return [
+            'available' => empty($missing),
+            'missing' => $missing
+        ];
+    }
+    
+    /**
+     * Get detailed extension status information
+     * @return array Extension status information
+     */
+    public function getExtensionStatus(): array {
+        $status = [];
+        $extensions = ['zip'];
+        
+        foreach ($extensions as $ext) {
+            // Check for extension files (optional, for Linux)
+            $soFiles = [];
+            if (function_exists('shell_exec')) {
+                $result = @shell_exec('find /usr -name "' . $ext . '.so" 2>/dev/null');
+                if ($result) {
+                    $soFiles = array_filter(array_map('trim', explode("\n", $result)));
+                }
+            }
+            
+            // Detect PHP API version from .so path (optional)
+            $apiVersion = null;
+            $wrongVersion = false;
+            foreach ($soFiles as $file) {
+                if (preg_match('/\/(\d{8})\/' . $ext . '\.so$/', $file, $matches)) {
+                    $apiVersion = $matches[1];
+                    $expectedApi = $this->getPhpApiVersion();
+                    if ($apiVersion !== $expectedApi) {
+                        $wrongVersion = true;
+                    }
+                    break;
+                }
+            }
+            
+            $status[$ext] = [
+                'loaded' => extension_loaded($ext),
+                'class_exists' => class_exists('ZipArchive'),
+                'so_files' => $soFiles,
+                'api_version' => $apiVersion,
+                'wrong_version' => $wrongVersion
+            ];
+        }
+        
+        return $status;
+    }
+    
+    /**
+     * Get PHP API version number
+     * @return string API version (e.g., "20220829" for PHP 8.2)
+     */
+    private function getPhpApiVersion(): string {
+        $version = PHP_VERSION;
+        if (version_compare($version, '8.3', '>=')) {
+            return '20230831';
+        } elseif (version_compare($version, '8.2', '>=')) {
+            return '20220829';
+        } elseif (version_compare($version, '8.1', '>=')) {
+            return '20210902';
+        } elseif (version_compare($version, '8.0', '>=')) {
+            return '20200930';
+        } else {
+            return '20190902'; // PHP 7.4
+        }
+    }
+    
+    /**
+     * Get PHP version for package installation
+     * @return string PHP version (e.g., '8.2', '8.3', '7.4')
+     */
+    private function getPhpVersionForPackage(): string {
+        $version = PHP_VERSION;
+        if (preg_match('/^(\d+)\.(\d+)/', $version, $matches)) {
+            return $matches[1] . '.' . $matches[2];
+        }
+        return '8.2'; // Default fallback
+    }
+    
+    /**
+     * Create user-friendly error message with installation instructions
+     * @param array $missing Missing extensions
+     * @return string Error message with installation instructions
+     */
+    public function getRequirementErrorMessage(array $missing): string {
+        $messages = [];
+        $phpVersion = $this->getPhpVersionForPackage();
+        $phpMajorMinor = explode('.', $phpVersion)[0] . '.' . explode('.', $phpVersion)[1];
+        $expectedApi = $this->getPhpApiVersion();
+        $extStatus = $this->getExtensionStatus();
+        
+        foreach ($missing as $ext) {
+            $extData = $extStatus[$ext] ?? [];
+            $wrongVersion = $extData['wrong_version'] ?? false;
+            $apiVersion = $extData['api_version'] ?? null;
+            
+            switch ($ext) {
+                case 'zip':
+                    $diagnosis = "Diagnose:\n" .
+                        "- PHP-Version: " . PHP_VERSION . "\n" .
+                        "- Extension geladen: " . ($extData['loaded'] ? 'Ja' : 'Nein') . "\n" .
+                        "- ZipArchive-Klasse: " . ($extData['class_exists'] ? 'Verfügbar' : 'Nicht verfügbar');
+                    
+                    if (!empty($extData['so_files'])) {
+                        $diagnosis .= "\n- " . $ext . ".so-Dateien gefunden: " . implode(', ', $extData['so_files']);
+                        if ($wrongVersion && $apiVersion) {
+                            $diagnosis .= "\n- ⚠️ WARNUNG: Gefundene " . $ext . ".so ist für API-Version " . $apiVersion . 
+                                        " aber PHP " . PHP_VERSION . " benötigt " . $expectedApi;
+                        }
+                    }
+                    
+                    $message = "PHP 'zip'-Extension ist nicht geladen.\n\n" . $diagnosis . "\n\n" .
+                        "⚠️ Installationsmethoden:\n\n";
+                    
+                    if ($wrongVersion && $apiVersion) {
+                        $message .= "⚠️ PROBLEM: Sie haben " . $ext . ".so für eine andere PHP-Version!\n\n" .
+                            "Lösung:\n" .
+                            "  1. php-zip neu installieren:\n" .
+                            "     sudo apt-get remove php-zip\n" .
+                            "     sudo apt-get install php-zip\n" .
+                            "  2. Richtige " . $ext . ".so prüfen:\n" .
+                            "     find /usr/lib/php/" . $expectedApi . "/" . $ext . ".so\n" .
+                            "  3. Aktivieren:\n" .
+                            "     echo 'extension=" . $ext . "' | sudo tee /etc/php/" . $phpMajorMinor . "/fpm/conf.d/20-" . $ext . ".ini\n" .
+                            "  4. PHP-FPM neu starten:\n" .
+                            "     sudo systemctl restart php" . $phpMajorMinor . "-fpm\n" .
+                            "  5. Überprüfen:\n" .
+                            "     php -m | grep " . $ext . "\n\n";
+                    } else {
+                        $message .= "Methode 1 - Paket installieren:\n" .
+                            "  sudo apt-get install php-zip\n" .
+                            "  Dann prüfen: find /usr/lib/php/" . $expectedApi . "/" . $ext . ".so\n\n" .
+                            "Methode 2 - Manuelle Aktivierung:\n" .
+                            "  1. Aktivierungsdatei erstellen:\n" .
+                            "     echo 'extension=" . $ext . "' | sudo tee /etc/php/" . $phpMajorMinor . "/fpm/conf.d/20-" . $ext . ".ini\n" .
+                            "  2. PHP-FPM neu starten:\n" .
+                            "     sudo systemctl restart php" . $phpMajorMinor . "-fpm\n\n";
+                    }
+                    
+                    $message .= "Für andere Systeme:\n" .
+                        "- CentOS/RHEL: sudo yum install php-zip (dann php-fpm neu starten)\n" .
+                        "- Windows: Kommentarzeichen vor 'extension=zip' in php.ini entfernen\n\n" .
+                        "Überprüfen:\n" .
+                        "  php -m | grep " . $ext . " (sollte '" . $ext . "' anzeigen)";
+                    
+                    $messages[] = $message;
+                    break;
+                    
+                default:
+                    $messages[] = "PHP-Extension '{$ext}' ist nicht installiert.";
+            }
+        }
+        
+        return implode("\n\n", $messages);
     }
 }
