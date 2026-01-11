@@ -136,6 +136,13 @@ try {
                 <li>Das Update kann einige Minuten dauern</li>
             </ul>
         </div>
+        
+        <!-- Back Button -->
+        <div style="margin-top: 2rem; text-align: center;">
+            <a href="<?php echo $basePath; ?>admin.php" class="btn-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; transition: all 0.3s ease;">
+                ← Zurück zur Administration
+            </a>
+        </div>
     </main>
     
     <?php include $baseDir . DIRECTORY_SEPARATOR . 'footer.php'; ?>

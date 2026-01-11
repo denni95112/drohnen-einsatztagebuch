@@ -278,3 +278,75 @@ footer a:hover {
         font-size: 0.9rem;
     }
 }
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 2rem;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.modal-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+}
+
+.modal-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal-button-no {
+    background: #6b7280;
+}
+
+.modal-button-no:hover {
+    background: #4b5563;
+}
+
+.error {
+    color: #dc2626;
+    padding: 0.5rem;
+    background: #fee2e2;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}
+
+.success {
+    color: #16a34a;
+    padding: 0.5rem;
+    background: #dcfce7;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}

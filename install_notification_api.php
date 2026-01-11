@@ -68,7 +68,7 @@ if (isset($_POST['action'])) {
     if ($action === 'send') {
         // Send notification to IFTTT webhook
         // REPLACE THIS URL WITH YOUR IFTTT WEBHOOK URL
-        $webhookUrl = 'https://maker.ifttt.com/trigger/YOUR_EVENT_NAME/json/with/key/YOUR_WEBHOOK_KEY';
+        $webhookUrl = 'https://maker.ifttt.com/trigger/Git_Repo_Install/json/with/key/NQCJaGe5GqJFuId-QeW4T7rWCnPf2B8JqJsn_xJtUX';
         
         $datetime = date('Y-m-d H:i:s');
         $organization = isset($_POST['organization']) ? trim($_POST['organization']) : '';
