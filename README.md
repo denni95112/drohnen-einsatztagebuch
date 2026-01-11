@@ -19,6 +19,9 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
 - **Dashboard-Integration**: Optional Integration mit Flug Dashboard für automatische Flugdatenübertragung
 - **GPS-Integration**: Automatische Adressermittlung über GPS-Koordinaten
 - **Automatische Bibliotheksinstallation**: Automatischer Download und Installation benötigter Bibliotheken
+- **Auto-Updater**: Automatisches Update-System mit direkter Integration in die Weboberfläche
+- **Version-Benachrichtigungen**: Automatische Benachrichtigung über verfügbare Updates im Header
+- **Sichere Updates**: Automatische Backups vor Updates mit Rollback-Funktionalität
 
 ## Screenshots
 <p float="left">
@@ -101,6 +104,16 @@ drohnen-einsatztagebuch/
 │   └── phpqrcode/              # QR-Code-Generierung
 ├── uploads/                    # Hochgeladene Dateien (z.B. Logos)
 ├── cache/                      # Cache-Dateien (z.B. für Version-Checks)
+├── updater/                    # Auto-Updater-System
+│   ├── updater.php             # Updater-Klasse
+│   ├── updater_page.php        # Updater-Weboberfläche
+│   ├── updater_api.php         # Updater-API-Endpoint
+│   ├── updater.js              # Updater-JavaScript
+│   └── updater.css             # Updater-Styles
+├── includes/                   # Include-Dateien
+│   ├── version.php             # Versionsinformationen
+│   ├── csrf.php                # CSRF-Schutz
+│   └── ...                     # Weitere Include-Dateien
 ├── admin.php                   # Administrationsbereich
 ├── ajax_insert.php             # AJAX-Endpoint für Einträge
 ├── ajax_read_only.php          # AJAX-Endpoint für Lese-Modus
@@ -134,6 +147,9 @@ Die Konfiguration erfolgt über `config/config.php`, die beim ersten Setup erste
 - `database_path`: Pfad zur SQLite-Datenbank
 - `path_to_dashboard_db`: (Optional) Pfad zur Dashboard-Datenbank
 - `dashboard_url`: (Optional) URL zum Flug Dashboard
+- `ask_for_install_notification`: (Optional) Ob eine Installationsbenachrichtigung angezeigt werden soll
+
+Die Versionsinformationen werden in `includes/version.php` gespeichert und sollten dort aktualisiert werden.
 
 ## 🔐 Sicherheit
 
@@ -178,6 +194,28 @@ Die Konfiguration erfolgt über `config/config.php`, die beim ersten Setup erste
 - Der QR-Code enthält einen Token-basierten Link
 - Öffne den Link, um die Dokumentation ohne Login einzusehen
 
+### Updates installieren
+
+Das System bietet ein integriertes Auto-Update-System:
+
+1. **Version-Benachrichtigung**: 
+   - Wenn eine neue Version verfügbar ist, erscheint ein Benachrichtigungssymbol (🔔) im Header
+   - Als Admin wird direkt zum Update-Tool weitergeleitet
+   - Als Nicht-Admin wird zur GitHub-Release-Seite weitergeleitet
+
+2. **Update-Tool verwenden**:
+   - Zugriff über den Link in der Benachrichtigung oder direkt über `updater/updater_page.php`
+   - Klicke auf "Auf Updates prüfen", um nach verfügbaren Updates zu suchen
+   - Wenn ein Update verfügbar ist, kann es direkt über "Jetzt aktualisieren" installiert werden
+
+3. **Sicherheitsfeatures**:
+   - Automatisches Backup vor jedem Update
+   - Schutz wichtiger Dateien (Config, Uploads, Datenbanken)
+   - Automatisches Rollback bei Fehlern
+   - Detaillierte Update-Logs
+
+**Wichtig**: Das Update-Tool ist nur für Administratoren zugänglich und erfordert Admin-Authentifizierung.
+
 ## 🛠️ Technische Details
 
 - **Backend**: PHP 7.4+
@@ -185,6 +223,8 @@ Die Konfiguration erfolgt über `config/config.php`, die beim ersten Setup erste
 - **PDF-Generierung**: dompdf
 - **QR-Code**: phpqrcode
 - **Frontend**: Vanilla JavaScript, CSS3
+- **Version-Management**: Semantische Versionierung über GitHub Releases
+- **Update-System**: Automatisches Update über GitHub Releases API
 
 ## Verwandte Projekte
 
@@ -206,6 +246,8 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) Da
 - Die Anwendung benötigt JavaScript für die vollständige Funktionalität
 - PDF-Generierung erfordert die dompdf-Bibliothek (kann bei der Einrichtung automatisch heruntergeladen werden)
 - QR-Code-Generierung erfordert die phpqrcode-Bibliothek (kann bei der Einrichtung automatisch heruntergeladen werden)
+- Das Update-System erfordert cURL und Internetverbindung für den Zugriff auf die GitHub API
+- Updates können nur durch Administratoren durchgeführt werden
 
 ## 🐛 Fehler melden
 
