@@ -4,6 +4,317 @@ require_once 'utils.php';
 require 'auth.php';
 requireAdminAuth();
 
+// Library installation functions (reused from setup.php logic)
+if (!function_exists('getAllLibraries')) {
+    function getAllLibraries() {
+        return [
+            'dompdf' => [
+                'path' => __DIR__ . '/lib/dompdf/autoload.inc.php',
+                'name' => 'dompdf',
+                'url' => 'https://github.com/dompdf/dompdf/releases/download/v3.1.4/dompdf-3.1.4.zip',
+                'github_api' => 'null'
+            ],
+            'phpqrcode' => [
+                'path' => __DIR__ . '/lib/phpqrcode/qrlib.php',
+                'name' => 'phpqrcode',
+                'url' => 'https://github.com/t0k4rt/phpqrcode/archive/refs/heads/master.zip',
+                'github_api' => null
+            ]
+        ];
+    }
+}
+
+if (!function_exists('rmdir_recursive')) {
+    function rmdir_recursive($dir) {
+        if (!is_dir($dir)) return;
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . '/' . $file;
+            is_dir($path) ? rmdir_recursive($path) : unlink($path);
+        }
+        rmdir($dir);
+    }
+}
+
+if (!function_exists('findLibraryPath')) {
+    function findLibraryPath($dir, $libName) {
+        if (!is_dir($dir)) return null;
+        $files = scandir($dir);
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') continue;
+            $fullPath = $dir . '/' . $file;
+            if ($libName === 'dompdf') {
+                if (file_exists($fullPath . '/autoload.inc.php')) {
+                    return $fullPath;
+                }
+                if (file_exists($fullPath . '/vendor/autoload.php')) {
+                    return $fullPath;
+                }
+                if (is_dir($fullPath)) {
+                    $found = findLibraryPath($fullPath, $libName);
+                    if ($found) return $found;
+                }
+            } elseif ($libName === 'phpqrcode') {
+                if (file_exists($fullPath . '/qrlib.php')) {
+                    return $fullPath;
+                }
+                if (is_dir($fullPath)) {
+                    $found = findLibraryPath($fullPath, $libName);
+                    if ($found) return $found;
+                }
+            }
+        }
+        return null;
+    }
+}
+
+if (!function_exists('downloadLibrary')) {
+    function downloadLibrary($libInfo, $libDir) {
+        if (!is_dir($libDir)) {
+            if (!mkdir($libDir, 0755, true)) {
+                return ['success' => false, 'error' => "Konnte Verzeichnis $libDir nicht erstellen"];
+            }
+        }
+        
+        if (!function_exists('curl_init')) {
+            return ['success' => false, 'error' => 'cURL ist nicht verfügbar. Bitte installiere die PHP cURL Extension.'];
+        }
+        
+        $tempFile = tempnam(sys_get_temp_dir(), 'lib_download_');
+        $fp = fopen($tempFile, 'w');
+        
+        if (!$fp) {
+            return ['success' => false, 'error' => "Konnte temporäre Datei nicht erstellen"];
+        }
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $libInfo['url']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'PHP Library Downloader');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
+        
+        $caBundlePaths = [
+            __DIR__ . '/cacert.pem',
+            ini_get('curl.cainfo'),
+            ini_get('openssl.cafile'),
+        ];
+        
+        $caBundleFound = false;
+        foreach ($caBundlePaths as $caPath) {
+            if ($caPath && file_exists($caPath)) {
+                curl_setopt($ch, CURLOPT_CAINFO, $caPath);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                $caBundleFound = true;
+                break;
+            }
+        }
+        
+        if (!$caBundleFound) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $success = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        fclose($fp);
+        
+        if (!$success || $httpCode !== 200) {
+            @unlink($tempFile);
+            return ['success' => false, 'error' => "Download fehlgeschlagen: " . ($error ?: "HTTP $httpCode")];
+        }
+        
+        if (!file_exists($tempFile) || filesize($tempFile) === 0) {
+            @unlink($tempFile);
+            return ['success' => false, 'error' => "Download-Datei ist leer oder fehlt"];
+        }
+        
+        $extractPath = $libDir . '/' . $libInfo['name'] . '_temp';
+        if (is_dir($extractPath)) {
+            rmdir_recursive($extractPath);
+        }
+        mkdir($extractPath, 0755, true);
+        
+        if (class_exists('ZipArchive')) {
+            $zip = new ZipArchive();
+            if ($zip->open($tempFile) !== TRUE) {
+                @unlink($tempFile);
+                rmdir_recursive($extractPath);
+                return ['success' => false, 'error' => 'Konnte ZIP-Datei nicht öffnen'];
+            }
+            $zip->extractTo($extractPath);
+            $zip->close();
+            @unlink($tempFile);
+        } else {
+            $unzipCommand = 'unzip';
+            $unzipPath = null;
+            $whichUnzip = shell_exec('which unzip 2>/dev/null');
+            if ($whichUnzip) {
+                $unzipPath = trim($whichUnzip);
+            } elseif (shell_exec('command -v unzip 2>/dev/null')) {
+                $unzipPath = 'unzip';
+            }
+            
+            if ($unzipPath) {
+                $tempFileEscaped = escapeshellarg($tempFile);
+                $extractPathEscaped = escapeshellarg($extractPath);
+                $command = "$unzipPath -q $tempFileEscaped -d $extractPathEscaped 2>&1";
+                $output = [];
+                $returnVar = 0;
+                exec($command, $output, $returnVar);
+                
+                @unlink($tempFile);
+                
+                if ($returnVar !== 0) {
+                    rmdir_recursive($extractPath);
+                    return ['success' => false, 'error' => 'ZIP-Extraktion fehlgeschlagen: ' . implode("\n", $output)];
+                }
+            } else {
+                @unlink($tempFile);
+                rmdir_recursive($extractPath);
+                return ['success' => false, 'error' => 'ZipArchive ist nicht verfügbar und unzip-Befehl wurde nicht gefunden.'];
+            }
+        }
+        
+        $files = scandir($extractPath);
+        $actualLibPath = null;
+        
+        if ($libInfo['name'] === 'dompdf' && (file_exists($extractPath . '/autoload.inc.php') || file_exists($extractPath . '/vendor/autoload.php'))) {
+            $actualLibPath = $extractPath;
+        } elseif ($libInfo['name'] === 'phpqrcode' && file_exists($extractPath . '/qrlib.php')) {
+            $actualLibPath = $extractPath;
+        } else {
+            $actualLibPath = findLibraryPath($extractPath, $libInfo['name']);
+            
+            if (!$actualLibPath) {
+                foreach ($files as $file) {
+                    if ($file === '.' || $file === '..') continue;
+                    $fullPath = $extractPath . '/' . $file;
+                    if (is_dir($fullPath) && (strpos($file, $libInfo['name']) !== false || strpos($file, 'dompdf') !== false || strpos($file, 'phpqrcode') !== false)) {
+                        $actualLibPath = findLibraryPath($fullPath, $libInfo['name']);
+                        if ($actualLibPath) break;
+                    }
+                }
+            }
+        }
+        
+        if (!$actualLibPath) {
+            rmdir_recursive($extractPath);
+            return ['success' => false, 'error' => 'Bibliotheksverzeichnis in ZIP nicht gefunden'];
+        }
+        
+        $finalPath = $libDir . '/' . $libInfo['name'];
+        if (is_dir($finalPath)) {
+            rmdir_recursive($finalPath);
+        }
+        
+        if (!rename($actualLibPath, $finalPath)) {
+            rmdir_recursive($extractPath);
+            return ['success' => false, 'error' => 'Konnte Bibliothek nicht nach ' . $finalPath . ' verschieben'];
+        }
+        
+        if (is_dir($extractPath)) {
+            rmdir_recursive($extractPath);
+        }
+        
+        return ['success' => true];
+    }
+}
+
+// Handle library reinstallation (AJAX)
+$isAjaxRequest = ($_SERVER['REQUEST_METHOD'] === 'POST' && 
+                 (!empty($_POST['ajax']) || 
+                  (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')));
+$isReinstallLibs = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reinstall_libs']));
+
+if ($isAjaxRequest && $isReinstallLibs) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8', true);
+        header('Cache-Control: no-cache, must-revalidate', true);
+        header('X-Content-Type-Options: nosniff', true);
+    }
+    ob_start();
+    
+    try {
+        $allLibs = getAllLibraries();
+        $libDir = __DIR__ . '/lib';
+        $results = [];
+        
+        foreach ($allLibs as $key => $lib) {
+            if (isset($_POST['lib_' . $key]) && $_POST['lib_' . $key] === '1') {
+                $result = downloadLibrary($lib, $libDir);
+                $results[$key] = $result;
+            }
+        }
+        
+        $output = ob_get_clean();
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        
+        $response = [
+            'results' => $results,
+            'all_libs' => getAllLibraries()
+        ];
+        
+        if (!empty($output) && trim($output) !== '') {
+            $response['debug_output'] = substr($output, 0, 500);
+        }
+        
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit;
+    } catch (Throwable $e) {
+        $output = ob_get_clean();
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        
+        echo json_encode([
+            'results' => [],
+            'error' => 'Ein Fehler ist aufgetreten: ' . $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Handle library reinstallation (non-AJAX)
+if ($isReinstallLibs && !$isAjaxRequest) {
+    $allLibs = getAllLibraries();
+    $libDir = __DIR__ . '/lib';
+    $success = true;
+    
+    foreach ($allLibs as $key => $lib) {
+        if (isset($_POST['lib_' . $key]) && $_POST['lib_' . $key] === '1') {
+            $result = downloadLibrary($lib, $libDir);
+            if (!$result['success']) {
+                $success = false;
+                break;
+            }
+        }
+    }
+    
+    if ($success) {
+        header("Location: admin.php?success=libs_reinstalled");
+    } else {
+        header("Location: admin.php?error=libs_reinstall_failed");
+    }
+    exit;
+}
+
 $configPath = __DIR__ . '/config/config.php';
 $config = include $configPath;
 $databasePath = isset($config['database_path']) ? $config['database_path'] : 'einsatzbuch.db';
@@ -164,6 +475,17 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
 
 <h2>Admin Verwaltung</h2>
 
+<?php if (isset($_GET['error'])): ?>
+    <div class="error-message">
+        <?php 
+        $errorMessages = [
+            "libs_reinstall_failed" => "Fehler beim Neuinstallieren der Bibliotheken!"
+        ];
+        echo $errorMessages[$_GET['error']] ?? "Ein Fehler ist aufgetreten!";
+        ?>
+    </div>
+<?php endif; ?>
+
 <?php if (isset($_GET['success'])): ?>
     <div class="success-message">
         <?php 
@@ -175,7 +497,8 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
             "einheit_geaendert" => "Einheit erfolgreich geändert!",
             "passwort_geaendert" => "Passwort wurde geändert!",
             "logo_geaendert" => "Logo erfolgreich hochgeladen!",
-            "logo_geloescht" => "Logo erfolgreich gelöscht!"
+            "logo_geloescht" => "Logo erfolgreich gelöscht!",
+            "libs_reinstalled" => "Bibliotheken erfolgreich neu installiert!"
         ];
         echo $messages[$_GET['success']] ?? "Aktion erfolgreich!";
         ?>
@@ -241,6 +564,35 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
         </form>
     </div>
 
+    <!-- Library Management -->
+    <div class="admin-section">
+        <h3>📚 Bibliotheken Verwaltung</h3>
+        <p>Benötigte Bibliotheken neu installieren (dompdf, phpqrcode)</p>
+        <?php 
+        $allLibraries = getAllLibraries();
+        $libStatus = [];
+        foreach ($allLibraries as $key => $lib) {
+            $libStatus[$key] = file_exists($lib['path']);
+        }
+        ?>
+        <form method="post" id="libReinstallForm">
+            <?php foreach ($allLibraries as $key => $lib): ?>
+            <label style="display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0;">
+                <input type="checkbox" name="lib_<?= $key ?>" value="1" checked>
+                <strong><?= htmlspecialchars($lib['name']) ?></strong>
+                <span style="color: <?= $libStatus[$key] ? '#28a745' : '#dc3545' ?>">
+                    (<?= $libStatus[$key] ? '✓ Installiert' : '✗ Fehlt' ?>)
+                </span>
+            </label>
+            <?php endforeach; ?>
+            <button type="submit" name="reinstall_libs" id="reinstallLibsBtn" class="btn-action" style="margin-top: 1rem;">
+                <span class="action-icon">📥</span>
+                <span>Ausgewählte Bibliotheken neu installieren</span>
+            </button>
+            <div id="reinstallStatus" style="margin-top: 1rem;"></div>
+        </form>
+    </div>
+
     <!-- Update Tool -->
     <div class="admin-section">
         <h3>🔄 Update Tool</h3>
@@ -287,6 +639,12 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
 <?php include 'footer.php'; ?>
 
 <script>
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const fileInputs = document.querySelectorAll('.file-input');
     
@@ -305,6 +663,79 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Library reinstallation form handler
+    const libReinstallForm = document.getElementById('libReinstallForm');
+    if (libReinstallForm) {
+        libReinstallForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('reinstallLibsBtn');
+            const status = document.getElementById('reinstallStatus');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="action-icon">⏳</span><span>Lädt herunter...</span>';
+            status.style.display = 'block';
+            status.innerHTML = '<p style="color: #856404;">Bibliotheken werden heruntergeladen, bitte warten...</p>';
+            
+            const formData = new FormData(libReinstallForm);
+            formData.append('ajax', '1');
+            formData.append('reinstall_libs', '1');
+            
+            fetch('admin.php', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    return response.text().then(text => {
+                        throw new Error('Server returned non-JSON response: ' + text.substring(0, 200));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                let html = '';
+                let allSuccess = true;
+                
+                if (data.error) {
+                    html += '<p style="color: #dc3545; font-weight: 500;">✗ ' + escapeHtml(data.error) + '</p>';
+                    allSuccess = false;
+                }
+                
+                if (data.results) {
+                    for (const [lib, result] of Object.entries(data.results)) {
+                        if (result.success) {
+                            html += '<p style="color: #28a745; font-weight: 500;">✓ ' + escapeHtml(lib) + ' erfolgreich installiert</p>';
+                        } else {
+                            html += '<p style="color: #dc3545; font-weight: 500;">✗ ' + escapeHtml(lib) + ': ' + escapeHtml(result.error || 'Fehler') + '</p>';
+                            allSuccess = false;
+                        }
+                    }
+                }
+                
+                if (allSuccess && data.results && Object.keys(data.results).length > 0) {
+                    html += '<p style="color: #28a745; font-weight: 600;"><strong>Alle Bibliotheken erfolgreich installiert! Seite wird neu geladen...</strong></p>';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
+                
+                status.innerHTML = html;
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            })
+            .catch(error => {
+                status.innerHTML = '<p style="color: #dc3545; font-weight: 500;">Fehler: ' + escapeHtml(error.message) + '</p>';
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        });
+    }
 });
 </script>
 

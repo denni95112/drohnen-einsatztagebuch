@@ -17,7 +17,8 @@ $changelog = [
             'Buy Me a Coffee Button hinzugefügt',
             'Update-Tool für direkte Aktualisierung von GitHub Releases',
             'Changelog-Seite hinzugefügt',
-            'Update-Tool Integration hinzugefügt'
+            'Update-Tool Integration hinzugefügt',
+            'Fehlende Bibliotheken werden in Admin-Bereich neu installieren'
         ]
     ],
     [
