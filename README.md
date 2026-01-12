@@ -6,6 +6,8 @@ Ein webbasiertes Einsatztagebuch für Drohneneinsätze mit Dokumentationsfunktio
 
 Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation von Drohneneinsätzen. Es ermöglicht die Erfassung von Einsatzdaten, Personal, Drohnen, Flugdaten und der vollständigen Einsatzdokumentation. Die Anwendung generiert PDF-Berichte und kann optional mit einem Flug Dashboard integriert werden.
 
+Die Anwendung verwendet eine moderne, RESTful API-basierte Architektur mit klarer Trennung von Controller, Model und View (MVC-Pattern).
+
 ## ✨ Features
 
 - **Einsatzverwaltung**: Erfassung und Verwaltung von Drohneneinsätzen
@@ -18,6 +20,7 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
 - **Lese-Modus**: Öffentlicher Lese-Modus mit Token-basiertem Zugriff
 - **Dashboard-Integration**: Optional Integration mit Flug Dashboard für automatische Flugdatenübertragung
 - **GPS-Integration**: Automatische Adressermittlung über GPS-Koordinaten
+- **RESTful API**: Moderne API-Architektur für alle Funktionen
 - **Automatische Bibliotheksinstallation**: Automatischer Download und Installation benötigter Bibliotheken
 - **Auto-Updater**: Automatisches Update-System mit direkter Integration in die Weboberfläche
 - **Version-Benachrichtigungen**: Automatische Benachrichtigung über verfügbare Updates im Header
@@ -46,7 +49,7 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
   - ZipArchive (für Bibliotheksinstallation)
   - DOM/XML (für PDF-Generierung mit dompdf)
   - GD (für QR-Code-Generierung)
-- Webserver (Apache, Nginx, etc.)
+- Webserver (Apache, Nginx, etc.) mit URL-Rewriting (mod_rewrite für Apache)
 
 ### Installationsschritte
 
@@ -59,10 +62,12 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
 2. **Webserver konfigurieren**
    - Richte einen virtuellen Host ein, der auf das Projektverzeichnis zeigt
    - Stelle sicher, dass PHP aktiviert ist
+   - Aktiviere mod_rewrite (Apache) oder konfiguriere URL-Rewriting (Nginx)
+   - Die `.htaccess`-Datei im Root-Verzeichnis konfiguriert automatisch die URL-Weiterleitung
 
 3. **Erstkonfiguration**
-   - Öffne die Anwendung im Browser
-   - Du wirst automatisch zum Setup weitergeleitet
+   - Öffne die Anwendung im Browser (z.B. `http://localhost/drohnen-einsatztagebuch/public/index.php?page=setup`)
+   - Du wirst automatisch zum Setup weitergeleitet, falls noch keine Konfiguration existiert
    - Fülle das Setup-Formular aus:
      - Ort und Einheit
      - Passwörter (Standard und Admin)
@@ -79,66 +84,193 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
 
 ```
 drohnen-einsatztagebuch/
-├── config/                    # Konfigurationsdateien
-│   ├── config.php              # Hauptkonfiguration (wird beim Setup erstellt)
-│   └── config.php.example      # Beispielkonfiguration
-├── css/                        # Stylesheets
-│   ├── drohnen.css             # Styling für Drohnenverwaltung
-│   ├── einsatzliste.css        # Styling für Einsatzliste
-│   ├── index.css               # Styling für Hauptübersicht
-│   ├── login.css               # Styling für Login-Seite
-│   ├── personal.css            # Styling für Personalverwaltung
-│   ├── setup.css               # Styling für Setup-Seite
-│   └── styles.css              # Globale Styles
-├── js/                         # JavaScript-Dateien
-│   ├── dokumentation.js        # Funktionen für Einsatzdokumentation
-│   ├── einsatzliste.js         # Funktionen für Einsatzliste
-│   ├── neuer_einsatz.js        # Funktionen für neuen Einsatz
-│   ├── read_only.js            # Funktionen für Lese-Modus
-│   └── setup.js                # Funktionen für Setup
-├── img/                        # Bilder und Icons
-│   ├── flugzeug_landung.png    # Icon für Landung
-│   ├── flugzeug_start.png      # Icon für Start
-│   ├── personensuche.png       # Icon für Personensuche
-│   └── warnung.png             # Icon für Warnung
-├── lib/                        # Externe Bibliotheken
-│   ├── dompdf/                 # PDF-Generierung
-│   └── phpqrcode/              # QR-Code-Generierung
-├── uploads/                    # Hochgeladene Dateien (z.B. Logos)
-├── cache/                      # Cache-Dateien (z.B. für Version-Checks)
-├── updater/                    # Auto-Updater-System
-│   ├── updater.php             # Updater-Klasse
-│   ├── updater_page.php        # Updater-Weboberfläche
-│   ├── updater_api.php         # Updater-API-Endpoint
-│   ├── updater.js              # Updater-JavaScript
-│   └── updater.css             # Updater-Styles
-├── includes/                   # Include-Dateien
-│   ├── version.php             # Versionsinformationen
-│   ├── csrf.php                # CSRF-Schutz
-│   └── ...                     # Weitere Include-Dateien
-├── admin.php                   # Administrationsbereich
-├── ajax_insert.php             # AJAX-Endpoint für Einträge
-├── ajax_read_only.php          # AJAX-Endpoint für Lese-Modus
-├── auth.php                    # Authentifizierung
-├── db.php                      # Datenbankverbindung und Schema
-├── dokumentation.php           # Einsatzdokumentation
-├── drohnen.php                 # Drohnenverwaltung
-├── einsatz_abschluss.php       # PDF-Generierung
-├── einsatzliste.php            # Einsatzliste
-├── footer.php                  # Wiederverwendbare Footer-Komponente
-├── header.php                  # Wiederverwendbare Header-Komponente
-├── index.php                   # Hauptübersicht
-├── insert_flight.php           # Flugdaten einfügen
-├── login.php                   # Login-Seite
-├── logout.php                  # Logout-Funktion
-├── neuer_einsatz.php           # Neuen Einsatz starten
-├── personal.php                # Personalverwaltung
-├── qr_generate.php             # QR-Code-Generierung
-├── read_only.php               # Lese-Modus
-├── setup.php                   # Erstkonfiguration
-├── utils.php                   # Utility-Funktionen
-└── version_check.php           # Version-Check für GitHub-Releases
+├── app/                          # Application Core (MVC-Architektur)
+│   ├── Controllers/              # API Controller
+│   │   ├── AuthController.php
+│   │   ├── EinsatzController.php
+│   │   ├── DokumentationController.php
+│   │   ├── PersonalController.php
+│   │   ├── DrohnenController.php
+│   │   └── FlightsController.php
+│   ├── Models/                   # Datenmodelle
+│   │   ├── BaseModel.php
+│   │   ├── Einsatz.php
+│   │   ├── Dokumentation.php
+│   │   ├── Personal.php
+│   │   ├── Drohne.php
+│   │   └── Flight.php
+│   ├── Services/                 # Business Logic
+│   │   ├── AuthService.php
+│   │   ├── PDFService.php
+│   │   ├── QRCodeService.php
+│   │   └── DashboardIntegrationService.php
+│   ├── Middleware/               # Middleware-Komponenten
+│   │   ├── AuthMiddleware.php
+│   │   ├── CSRFMiddleware.php
+│   │   └── RateLimitMiddleware.php
+│   ├── Utils/                    # Utility-Klassen
+│   │   ├── Database.php
+│   │   ├── Response.php
+│   │   └── Validator.php
+│   └── autoload.php              # PSR-4 Autoloader
+│
+├── api/                          # RESTful API
+│   ├── router.php                # API Router
+│   ├── .htaccess                 # API URL-Rewriting
+│   └── v1/                       # API Version 1
+│       ├── index.php
+│       ├── qr.php                # QR-Code Endpoint
+│       └── install_notification.php
+│
+├── views/                        # Presentation Layer
+│   ├── layouts/                  # Layout-Komponenten
+│   │   ├── header.php
+│   │   └── footer.php
+│   ├── pages/                    # Seiten-Views
+│   │   ├── index.php
+│   │   ├── login.php
+│   │   ├── admin.php
+│   │   ├── dokumentation.php
+│   │   ├── einsatzliste.php
+│   │   ├── neuer_einsatz.php
+│   │   ├── personal.php
+│   │   ├── drohnen.php
+│   │   ├── read_only.php
+│   │   ├── setup.php
+│   │   ├── about.php
+│   │   └── changelog.php
+│   └── components/               # Wiederverwendbare Komponenten
+│
+├── public/                       # Öffentliche Assets & Front Controller
+│   ├── index.php                 # Front Controller für Web-Seiten
+│   ├── css/                      # Stylesheets
+│   │   ├── drohnen.css
+│   │   ├── einsatzliste.css
+│   │   ├── index.css
+│   │   ├── login.css
+│   │   ├── personal.css
+│   │   ├── setup.css
+│   │   ├── styles.css
+│   │   ├── about.css
+│   │   └── changelog.css
+│   ├── js/                       # JavaScript-Dateien
+│   │   ├── dokumentation.js
+│   │   ├── einsatzliste.js
+│   │   ├── neuer_einsatz.js
+│   │   ├── read_only.js
+│   │   ├── setup.js
+│   │   └── install_notification.js
+│   ├── img/                      # Bilder und Icons
+│   │   ├── flugzeug_landung.png
+│   │   ├── flugzeug_start.png
+│   │   ├── personensuche.png
+│   │   └── warnung.png
+│   └── .htaccess
+│
+├── config/                       # Konfigurationsdateien
+│   ├── config.php                # Hauptkonfiguration (wird beim Setup erstellt)
+│   └── config.php.example        # Beispielkonfiguration
+│
+├── includes/                     # Include-Dateien
+│   ├── version.php               # Versionsinformationen
+│   ├── csrf.php                  # CSRF-Schutz
+│   ├── error_reporting.php       # Fehlerbehandlung
+│   ├── security_headers.php      # Sicherheits-Header
+│   ├── rate_limit.php            # Rate Limiting
+│   ├── changelog_data.php        # Changelog-Daten
+│   └── buy_me_a_coffee.php       # Support-Komponente
+│
+├── lib/                          # Externe Bibliotheken
+│   ├── dompdf/                   # PDF-Generierung
+│   └── phpqrcode/                # QR-Code-Generierung
+│
+├── updater/                      # Auto-Updater-System
+│   ├── updater.php               # Updater-Klasse
+│   ├── updater_page.php          # Updater-Weboberfläche
+│   ├── updater_api.php           # Updater-API-Endpoint
+│   ├── updater.js                # Updater-JavaScript
+│   └── updater.css               # Updater-Styles
+│
+├── uploads/                      # Hochgeladene Dateien (z.B. Logos)
+│
+├── .htaccess                     # URL-Rewriting für Root
+├── index.php                     # Root-Index (leitet zu public/index.php weiter)
+├── auth.php                      # Authentifizierung (Kompatibilität)
+├── db.php                        # Datenbankverbindung (Kompatibilität)
+├── utils.php                     # Utility-Funktionen
+├── bootstrap.php                 # Bootstrap-Loader
+├── logout.php                    # Logout-Handler
+└── README.md                     # Diese Datei
 ```
+
+## 🔌 RESTful API
+
+Die Anwendung bietet eine vollständige RESTful API unter `/api/v1/`:
+
+### Authentifizierung
+- `POST /api/v1/auth/login` - Login
+- `POST /api/v1/auth/logout` - Logout
+- `GET /api/v1/auth/check` - Authentifizierungsstatus prüfen
+
+### Einsätze
+- `GET /api/v1/einsatz` - Alle Einsätze auflisten
+- `GET /api/v1/einsatz/{id}` - Einsatz-Details abrufen
+- `POST /api/v1/einsatz` - Neuen Einsatz erstellen
+- `PUT /api/v1/einsatz/{id}` - Einsatz aktualisieren
+- `POST /api/v1/einsatz/{id}/complete` - Einsatz abschließen
+- `GET /api/v1/einsatz/{id}/pdf` - PDF-Bericht generieren
+- `GET /api/v1/einsatz/{id}/dokumentation` - Dokumentation abrufen
+- `POST /api/v1/einsatz/{id}/dokumentation` - Dokumentationseintrag hinzufügen
+
+### Personal
+- `GET /api/v1/personal` - Alle Personen auflisten
+- `POST /api/v1/personal` - Person erstellen
+- `PUT /api/v1/personal/{id}` - Person aktualisieren
+- `DELETE /api/v1/personal/{id}` - Person löschen
+
+### Drohnen
+- `GET /api/v1/drohnen` - Alle Drohnen auflisten
+- `POST /api/v1/drohnen` - Drohne erstellen
+- `PUT /api/v1/drohnen/{id}` - Drohne aktualisieren
+- `DELETE /api/v1/drohnen/{id}` - Drohne löschen
+
+### Weitere Endpoints
+- `POST /api/v1/flights` - Flugdaten einfügen (Dashboard-Integration)
+- `GET /api/v1/qr?data=...` - QR-Code generieren
+
+Alle API-Endpunkte liefern JSON-Antworten im Format:
+```json
+{
+  "success": true,
+  "data": { ... },
+  "message": "..."
+}
+```
+
+## 🌐 URL-Struktur
+
+### Web-Seiten
+Alle Seiten werden über den Front Controller aufgerufen:
+- `/public/index.php?page=index` - Hauptübersicht
+- `/public/index.php?page=login` - Login
+- `/public/index.php?page=admin` - Administration
+- `/public/index.php?page=dokumentation&einsatz_id=X` - Einsatzdokumentation
+- `/public/index.php?page=einsatzliste` - Alle Einsätze
+- `/public/index.php?page=neuer_einsatz` - Neuen Einsatz starten
+- `/public/index.php?page=personal` - Personalverwaltung
+- `/public/index.php?page=drohnen` - Drohnenverwaltung
+- `/public/index.php?page=read_only&einsatz_id=X&token=...` - Lese-Modus
+- `/public/index.php?page=setup` - Erstkonfiguration
+- `/public/index.php?page=about` - Über
+- `/public/index.php?page=changelog` - Changelog
+
+### Assets
+Assets werden automatisch von `public/` bereitgestellt:
+- `/css/...` - Stylesheets
+- `/js/...` - JavaScript-Dateien
+- `/img/...` - Bilder
+
+Die `.htaccess`-Datei leitet diese Anfragen automatisch an `public/` weiter.
 
 ## 🔧 Konfiguration
 
@@ -149,6 +281,8 @@ Die Konfiguration erfolgt über `config/config.php`, die beim ersten Setup erste
 - `database_path`: Pfad zur SQLite-Datenbank
 - `path_to_dashboard_db`: (Optional) Pfad zur Dashboard-Datenbank
 - `dashboard_url`: (Optional) URL zum Flug Dashboard
+- `read_token`: Token für den Lese-Modus
+- `domain`: Domain der Anwendung (für QR-Codes)
 - `ask_for_install_notification`: (Optional) Ob eine Installationsbenachrichtigung angezeigt werden soll
 
 Die Versionsinformationen werden in `includes/version.php` gespeichert und sollten dort aktualisiert werden.
@@ -159,8 +293,11 @@ Die Versionsinformationen werden in `includes/version.php` gespeichert und sollt
 - Session-basierte Authentifizierung
 - Cookie-basierte "Angemeldet bleiben"-Funktion
 - Token-basierter Lese-Modus
+- CSRF-Schutz für alle Formulare und API-Endpunkte
 - Input-Validierung und XSS-Schutz
 - Prepared Statements für alle Datenbankabfragen
+- Rate Limiting für API-Endpunkte
+- Sicherheits-Header (X-Content-Type-Options, X-Frame-Options, etc.)
 
 ## 📖 Verwendung
 
@@ -186,7 +323,7 @@ Die Versionsinformationen werden in `includes/version.php` gespeichert und sollt
 
 ### Einsatz abschließen
 
-1. Klicke auf "Einsatz abschließen & PDF erstellen"
+1. Klicke auf "Einsatz abschließen"
 2. Ein PDF-Bericht wird automatisch generiert und heruntergeladen
 3. Der Einsatz wird als abgeschlossen markiert
 
@@ -221,16 +358,19 @@ Das System bietet ein integriertes Auto-Update-System:
 ## 🛠️ Technische Details
 
 - **Backend**: PHP 7.4+
+- **Architektur**: MVC-Pattern mit RESTful API
 - **Datenbank**: SQLite3
 - **PDF-Generierung**: dompdf
 - **QR-Code**: phpqrcode
 - **Frontend**: Vanilla JavaScript, CSS3
+- **Autoloading**: PSR-4 Autoloader
+- **API**: RESTful API mit JSON-Responses
 - **Version-Management**: Semantische Versionierung über GitHub Releases
 - **Update-System**: Automatisches Update über GitHub Releases API
 
 ## Verwandte Projekte
 
-Dieses Projekt kann zusammen mit dem **[Drohnen-Flug-und-Dienstbuch]([https://github.com/denni95112/drohnen-einsatztagebuch](https://github.com/denni95112/drohnen-flug-und-dienstbuch))** verwendet werden. Das Drohnen-Flug-und-Dienstbuch bietet zusätzliche Funktionen zur Dokumentation von Drohnen Flügen, Einsätzen und Diensten.
+Dieses Projekt kann zusammen mit dem **[Drohnen-Flug-und-Dienstbuch](https://github.com/denni95112/drohnen-flug-und-dienstbuch)** verwendet werden. Das Drohnen-Flug-und-Dienstbuch bietet zusätzliche Funktionen zur Dokumentation von Drohnen Flügen, Einsätzen und Diensten.
 
 ## 📝 Lizenz
 
@@ -242,7 +382,6 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) Da
 
 - GitHub: [@denni95112](https://github.com/denni95112)
 
-
 ## ⚠️ Bekannte Einschränkungen
 
 - Die Anwendung benötigt JavaScript für die vollständige Funktionalität
@@ -250,6 +389,7 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe [LICENSE](LICENSE) Da
 - QR-Code-Generierung erfordert die phpqrcode-Bibliothek (kann bei der Einrichtung automatisch heruntergeladen werden)
 - Das Update-System erfordert cURL und Internetverbindung für den Zugriff auf die GitHub API
 - Updates können nur durch Administratoren durchgeführt werden
+- URL-Rewriting muss im Webserver aktiviert sein (mod_rewrite für Apache)
 
 ## 🐛 Fehler melden
 

@@ -1,0 +1,40 @@
+# Enable Rewrite Engine
+RewriteEngine On
+RewriteBase /
+
+# API Routes
+RewriteCond %{REQUEST_URI} ^/api/v1/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/v1/(.*)$ api/router.php [QSA,L]
+
+# Redirect old page URLs to new structure (from root)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(about|admin|changelog|dokumentation|drohnen|einsatzliste|login|neuer_einsatz|personal|read_only|setup)\.php$ /public/index.php?page=$1 [QSA,L]
+
+# Redirect old page URLs from /public/ directory (prevent double /public/)
+RewriteCond %{REQUEST_URI} ^/public/(about|admin|changelog|dokumentation|drohnen|einsatzliste|login|neuer_einsatz|personal|read_only|setup)\.php$
+RewriteRule ^public/(.*)\.php$ /public/index.php?page=$1 [QSA,L]
+
+# Redirect old API endpoints to new API
+RewriteRule ^ajax_insert\.php$ /api/v1/dokumentation [R=301,L]
+RewriteRule ^ajax_read_only\.php$ /api/v1/einsatz/dokumentation [R=301,L]
+RewriteRule ^insert_flight\.php$ /api/v1/flights [R=301,L]
+RewriteRule ^einsatz_abschluss\.php$ /api/v1/einsatz/pdf [R=301,L]
+RewriteRule ^qr_generate\.php$ /api/v1/qr [R=301,L]
+RewriteRule ^install_notification_api\.php$ /api/v1/install_notification [R=301,L]
+
+# Redirect logout to API
+RewriteRule ^logout\.php$ /api/v1/auth/logout [R=301,L]
+
+# Public assets (css, js, img from public/)
+RewriteCond %{REQUEST_URI} ^/(css|js|img)/
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Uploads are served directly from root directory (no rewrite needed)
+
+# Default: serve from public directory
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/index.php [QSA,L]
