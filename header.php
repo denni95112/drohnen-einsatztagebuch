@@ -37,8 +37,11 @@ if (isset($config['ask_for_install_notification']) && $config['ask_for_install_n
         $basePath = (strpos($scriptName, '/updater/') !== false || strpos($scriptName, '\\updater\\') !== false) ? '../' : '';
         
         $logoPath = !empty($config['logo_path']) ? ($basePath . $config['logo_path']) : '';
+        $indexPath = $basePath . 'index.php';
         if (!empty($config['logo_path']) && file_exists(__DIR__ . '/' . $config['logo_path'])): ?>
-            <img src="<?= htmlspecialchars($logoPath) ?>" alt="Logo" class="header-logo">
+            <a href="<?= htmlspecialchars($indexPath) ?>" class="header-logo-link">
+                <img src="<?= htmlspecialchars($logoPath) ?>" alt="Logo" class="header-logo">
+            </a>
         <?php endif; ?>
         <h1>Einsatztagebuch <?php echo htmlspecialchars($config['navigation_title']) ?></h1>
         <?php if ($versionUpdate): 

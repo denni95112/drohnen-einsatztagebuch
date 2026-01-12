@@ -109,10 +109,13 @@ function setLoginCookie($password) {
 /**
  * Get password from cookie
  *
- * @return string Decoded password
+ * @return string Decoded password or empty string if cookie not set
  */
 function getPasswortFromCookie() {
     $config = getConfig();
+    if (!isset($_COOKIE[$config['token_name']])) {
+        return '';
+    }
     $cookie_value = $_COOKIE[$config['token_name']];
     return base64_decode($cookie_value);
 }

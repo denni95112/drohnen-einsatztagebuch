@@ -74,6 +74,17 @@ h3 {
     position: relative;
 }
 
+.header-logo-link {
+    display: inline-block;
+    text-decoration: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.header-logo-link:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
 .header-logo {
     max-height: 60px;
     max-width: 120px;

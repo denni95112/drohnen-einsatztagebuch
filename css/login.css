@@ -39,6 +39,18 @@ body, html {
     }
 }
 
+.login-logo {
+    max-height: 80px;
+    max-width: 160px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    margin-bottom: 1.5rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .login-container h1 {
     margin-bottom: 1.5rem;
     color: #1e3c72;

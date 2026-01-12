@@ -73,6 +73,9 @@ require_once __DIR__ . '/includes/changelog_data.php';
             <?php endforeach; ?>
         </div>
     </main>
+    <div style="margin: 2rem auto; max-width: 900px; padding: 0 2rem;">
+        <a href="index.php" class="back-btn">Zurück zur Übersicht</a>
+    </div>
     <?php include 'footer.php'; ?>
 </body>
 </html>
