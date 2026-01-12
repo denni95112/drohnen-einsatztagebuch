@@ -44,6 +44,8 @@ Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation
   - PDO_SQLITE
   - cURL (für Bibliotheksdownloads)
   - ZipArchive (für Bibliotheksinstallation)
+  - DOM/XML (für PDF-Generierung mit dompdf)
+  - GD (für QR-Code-Generierung)
 - Webserver (Apache, Nginx, etc.)
 
 ### Installationsschritte
