@@ -51,6 +51,7 @@ class Updater {
             'config/',
             'uploads/',
             'logs/',
+            'lib/',
             'manifest.json',
             '.git/',
             '.gitignore',
