@@ -77,7 +77,7 @@ class AuthService {
      */
     public static function requireAuth() {
         if (!self::isAuthenticated()) {
-            header('Location: /login.php');
+            header('Location: /public/index.php?page=login');
             exit();
         }
     }
@@ -87,7 +87,7 @@ class AuthService {
      */
     public static function requireAdminAuth() {
         if (!self::isAdminAuthenticated()) {
-            header('Location: /index.php');
+            header('Location: /public/index.php?page=index');
             exit();
         }
     }

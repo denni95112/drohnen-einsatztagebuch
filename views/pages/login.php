@@ -4,6 +4,8 @@
  */
 require_once dirname(__DIR__, 2) . '/bootstrap.php';
 
+use App\Services\AuthService;
+
 $error = '';
 
 if (isAuthenticated()) {

@@ -151,8 +151,12 @@ if ($resourceId && $action) {
         $params = [$resourceId];
     }
 } elseif ($resourceId) {
-    // Route like /resource/{id}
-    if (isset($routeConfig['routes']['{id}'])) {
+    // Check if resourceId is actually a named route (like 'login', 'logout', 'check' for auth)
+    if (isset($routeConfig['routes'][$resourceId])) {
+        // It's a named route, not an ID
+        $method = $routeConfig['routes'][$resourceId];
+    } elseif (isset($routeConfig['routes']['{id}'])) {
+        // Route like /resource/{id}
         $method = $routeConfig['routes']['{id}'];
         $params = [$resourceId];
     }

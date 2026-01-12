@@ -37,6 +37,14 @@ if (!file_exists(dirname(__DIR__) . '/config/config.php')) {
 // Get requested page
 $page = $_GET['page'] ?? 'index';
 
+// Pages that don't require authentication
+$publicPages = ['login', 'setup', 'read_only', 'about', 'changelog'];
+
+// Require authentication for protected pages
+if (!in_array($page, $publicPages)) {
+    AuthService::requireAuth();
+}
+
 // Map page names to view files
 $pageMap = [
     'index' => 'index.php',
