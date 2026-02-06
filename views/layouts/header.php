@@ -35,6 +35,7 @@ $versionUpdate = checkForNewVersion($currentVersion, $config);
             </a>
         <?php endif; ?>
         <h1>Einsatztagebuch <?php echo htmlspecialchars($config['navigation_title']) ?></h1>
+        <a href="https://github.com/denni95112/drohnen-einsatztagebuch/wiki" target="_blank" rel="noopener noreferrer" class="header-wiki-btn" title="Anleitung (Wiki)">Wiki</a>
         <?php if ($versionUpdate): 
             // Determine if user is admin and set appropriate link
             $isAdminForLink = false;

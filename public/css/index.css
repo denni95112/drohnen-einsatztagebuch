@@ -58,6 +58,26 @@ h1 {
     min-width: 200px;
 }
 
+.header-wiki-btn {
+    display: inline-flex;
+    align-items: center;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    margin-left: auto;
+}
+
+.header-wiki-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: #fff;
+}
+
 .version-notification {
     position: relative;
     display: inline-flex;
@@ -70,7 +90,6 @@ h1 {
     border-radius: 20px;
     transition: all 0.3s ease;
     font-size: 0.9rem;
-    margin-left: auto;
 }
 
 .version-notification:hover {

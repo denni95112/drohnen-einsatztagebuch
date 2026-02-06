@@ -35,7 +35,8 @@ $changelog = [
             'PSR-4 Autoloading',
             'Front-Controller für Web-Seiten',
             'Organisierte Projektstruktur',
-            'Verbesserte API-Dokumentation'
+            'Verbesserte API-Dokumentation',
+            'Wiki Link hinzugefügt'
         ]
     ],
     [

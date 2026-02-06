@@ -2,6 +2,8 @@
 
 Ein webbasiertes Einsatztagebuch für Drohneneinsätze mit Dokumentationsfunktionen, PDF-Export und Integration mit dem Flug Dashboard.
 
+📖 **Ausführliche Anleitung**: [Wiki](https://github.com/denni95112/drohnen-einsatztagebuch/wiki)
+
 ## 📋 Beschreibung
 
 Das Drohnen-Einsatztagebuch ist eine PHP-basierte Webanwendung zur Dokumentation von Drohneneinsätzen. Es ermöglicht die Erfassung von Einsatzdaten, Personal, Drohnen, Flugdaten und der vollständigen Einsatzdokumentation. Die Anwendung generiert PDF-Berichte und kann optional mit einem Flug Dashboard integriert werden.
@@ -36,6 +38,19 @@ Die Anwendung verwendet eine moderne, RESTful API-basierte Architektur mit klare
   <img src="https://github.com/user-attachments/assets/efe93dec-3e50-4021-addc-57181499f16f" width="150" />
 </p>
 
+## 📖 Verwendung & Dokumentation
+
+Die ausführliche Bedienungsanleitung mit allen Funktionen findet sich im **[Wiki](https://github.com/denni95112/drohnen-einsatztagebuch/wiki)**:
+
+| Thema | Wiki-Seite |
+|-------|------------|
+| Einstieg | [Einrichtung](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Einrichtung), [Anmeldung (Login)](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Anmeldung-Login), [Startseite](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Startseite) |
+| Einsätze | [Einsatzliste](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Einsatzliste), [Neuer Einsatz](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Neuer-Einsatz), [Dokumentation](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Dokumentation) |
+| Stammdaten | [Personal verwalten](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Personal-verwalten), [Drohnen verwalten](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Drohnen-verwalten) |
+| Export & Teilen | [PDF-Export](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/PDF-Export), [Lese-Modus und QR-Code](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Lese-Modus-QR-Code) |
+| Admin & Integration | [Admin-Login](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Admin-Login), [Dashboard-Integration](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Dashboard-Integration), [Updates](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Updates) |
+| Sonstiges | [Kopfzeilen-Benachrichtigungen](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Kopfzeilen-Benachrichtigungen), [Über](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Über), [Changelog](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Changelog) |
+
 ## 🚀 Installation
 
 ### Voraussetzungen
@@ -68,7 +83,7 @@ Die Anwendung verwendet eine moderne, RESTful API-basierte Architektur mit klare
 3. **Erstkonfiguration**
    - Öffne die Anwendung im Browser (z.B. `http://localhost/drohnen-einsatztagebuch/public/index.php?page=setup`)
    - Du wirst automatisch zum Setup weitergeleitet, falls noch keine Konfiguration existiert
-   - Fülle das Setup-Formular aus:
+   - Fülle das Setup-Formular aus (Details: [Wiki – Einrichtung](https://github.com/denni95112/drohnen-einsatztagebuch/wiki/Einrichtung)):
      - Ort und Einheit
      - Passwörter (Standard und Admin)
      - Datenbankpfad (optional, Standard: `einsatzbuch.db`)
