@@ -1,3 +1,7 @@
+# Wiki (GitHub wiki clone, falls lokal ausgecheckt)
+*.wiki/
+wiki/
+
 # Konfigurationsdateien mit sensiblen Daten
 config/config.php
 

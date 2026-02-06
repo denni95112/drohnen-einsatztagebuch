@@ -30,6 +30,7 @@ $changelog = [
             'RESTful API für alle Funktionen',
             'Moderne MVC-Architektur',
             'Service-Layer für Business-Logik',
+            'Dashboard-Integration über APIhinzugefügt',      
             'Middleware-System für Sicherheit',
             'PSR-4 Autoloading',
             'Front-Controller für Web-Seiten',
