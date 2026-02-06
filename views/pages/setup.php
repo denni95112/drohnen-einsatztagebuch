@@ -565,16 +565,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
     $database_path = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $database_path);
     $database_path_escaped = addslashes($database_path);
 
-    $path_to_dashboard_db = trim($_POST['path_to_dashboard_db'] ?? '');
-    if (!empty($path_to_dashboard_db)) {
-        $path_to_dashboard_db = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path_to_dashboard_db);
-        $path_to_dashboard_db_escaped = addslashes($path_to_dashboard_db);
-    }
-
-    $dashboard_url = trim($_POST['dashboard_url'] ?? '');
-    if (!empty($dashboard_url)) {
-        $dashboard_url = rtrim($dashboard_url, '/');
-        $dashboard_url_escaped = addslashes($dashboard_url);
+    $dashboard_api_url = trim($_POST['dashboard_api_url'] ?? '');
+    $dashboard_api_token = trim($_POST['dashboard_api_token'] ?? '');
+    if (!empty($dashboard_api_url)) {
+        $dashboard_api_url = rtrim($dashboard_api_url, '/');
     }
 
     $config = "<?php\nreturn [\n" .
@@ -594,12 +588,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
         $config .= "    'logo_path' => '" . addslashes($logo_path) . "',\n";
     }
     
-    if (!empty($path_to_dashboard_db)) {
-        $config .= "    'path_to_dashboard_db' => '" . $path_to_dashboard_db_escaped . "',\n";
-    }
-    
-    if (!empty($dashboard_url)) {
-        $config .= "    'dashboard_url' => '" . $dashboard_url_escaped . "',\n";
+    if (!empty($dashboard_api_url)) {
+        $config .= "    'dashboard_api_url' => '" . addslashes($dashboard_api_url) . "',\n";
+        if (!empty($dashboard_api_token)) {
+            $config .= "    'dashboard_api_token' => '" . addslashes($dashboard_api_token) . "',\n";
+        }
+        $config .= "    'dashboard_url' => '" . addslashes($dashboard_api_url) . "',\n";
     }
     
     $config .= "];\n";
@@ -705,24 +699,19 @@ $missingLibraries = checkLibraries();
         </small>
         <br>
         <label>
-            Pfad zur Flug Dashboard Datenbank (optional)
+            Dashboard-Integration (Flug-Dienstbuch) – optional
             <span class="tooltip">?
                 <span class="tooltiptext">
-                    Wenn du auch das Flug Dashboard verwendest, kann das Einsatztagebuch die Flüge automatisch einfügen. Dafür wird der Pfad zur Datenbank des Flugdashboards benötigt.
+                    Verbindung zum Drohnen-Flug-und-Dienstbuch per API. Wenn konfiguriert, werden Piloten, Drohnen und Flugstandorte von dort geladen und Flüge per API übertragen. API-URL und Token findest du im Flug-Dienstbuch unter Admin → Dashboard-Integration.
                 </span>
             </span>
         </label>
-        <input type="text" name="path_to_dashboard_db" placeholder="z.B. C:/data/dashboard-database.sqlite oder leer lassen">
         <br>
-        <label>
-            Flug Dashboard URL (optional)
-            <span class="tooltip">?
-                <span class="tooltiptext">
-                    Die URL zum Flug Dashboard, falls du es verwendest. Wird für Verlinkungen und Integration verwendet.
-                </span>
-            </span>
-        </label>
-        <input type="url" name="dashboard_url" placeholder="z.B. https://example.com/dashboard oder leer lassen">
+        <label for="setup_dashboard_api_url">API-Basis-URL (Flug-Dienstbuch)</label>
+        <input type="url" name="dashboard_api_url" id="setup_dashboard_api_url" placeholder="z.B. https://mein-server.de/flug-dienstbuch oder leer lassen">
+        <br>
+        <label for="setup_dashboard_api_token">API-Token (optional, kann später in der Administration gesetzt werden)</label>
+        <input type="password" name="dashboard_api_token" id="setup_dashboard_api_token" placeholder="Token aus Flug-Dienstbuch (Admin → API-Tokens)" autocomplete="off">
         <br>
         <label>
             Logo hochladen (optional)

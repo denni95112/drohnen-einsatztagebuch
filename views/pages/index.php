@@ -16,8 +16,11 @@
 <?php include dirname(__DIR__) . '/layouts/header.php'; ?>
 
 <div class="button-container">
-    <?php if ($config['dashboard_url']): ?>
-        <a href="<?= htmlspecialchars($config['dashboard_url']) ?>" class="btn-dashboard">Dashboard öffnen</a>
+    <?php
+    $dashboardLinkUrl = !empty($config['dashboard_url']) ? trim($config['dashboard_url']) : (!empty($config['dashboard_api_url']) ? rtrim(trim($config['dashboard_api_url']), '/') : '');
+    if ($dashboardLinkUrl !== ''):
+    ?>
+        <a href="<?= htmlspecialchars($dashboardLinkUrl) ?>" class="btn-dashboard">Dashboard öffnen</a>
     <?php endif; ?>
     <?php if ($isAdmin): ?>
         <?php if (!empty($dashboardApiManaged)): ?>

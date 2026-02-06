@@ -736,7 +736,9 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
     </div>
 </div>
 
-<a href="/public/index.php?page=index" class="back-btn">Zurück zur Übersicht</a>
+<nav class="back-btn-wrapper" aria-label="Zurück zur Übersicht">
+    <a href="/public/index.php?page=index" class="back-btn" id="admin-back-btn">Zurück zur Übersicht</a>
+</nav>
 
 <?php include dirname(__DIR__) . '/layouts/footer.php'; ?>
 
@@ -748,6 +750,35 @@ function escapeHtml(text) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // First-click fix: something overlays header/back link. Intercept in capture phase by position.
+    var indexUrl = '/public/index.php?page=index';
+    document.addEventListener('click', function(e) {
+        if (e.button !== 0) return;
+        var header = document.querySelector('.page-header');
+        var backWrapper = document.querySelector('.back-btn-wrapper');
+        var headerLink = header && header.querySelector('a[href*="index.php"]');
+        var backLink = document.getElementById('admin-back-btn');
+        var x = e.clientX, y = e.clientY;
+        if (header) {
+            var r = header.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = (headerLink && headerLink.href) ? headerLink.href : indexUrl;
+                return;
+            }
+        }
+        if (backWrapper) {
+            var r = backWrapper.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = (backLink && backLink.getAttribute('href')) || indexUrl;
+                return;
+            }
+        }
+    }, true);
+
     const fileInputs = document.querySelectorAll('.file-input');
     
     fileInputs.forEach(input => {
