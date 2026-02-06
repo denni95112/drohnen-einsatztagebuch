@@ -626,7 +626,7 @@ $missingLibraries = checkLibraries();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup Einsatztagebuch</title>
     <link rel="stylesheet" href="<?= getVersionedAsset('css/setup.css') ?>">
-    <script src="/js/setup.js"></script>
+    <script src="<?= getVersionedAsset('js/setup.js') ?>"></script>
 </head>
 <body>
     <?php include dirname(__DIR__) . '/layouts/header.php'; ?>

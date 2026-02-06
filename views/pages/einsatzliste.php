@@ -56,7 +56,7 @@ $einsaetze = $einsatzModel->getAllWithPersonal();
 
 <?php include dirname(__DIR__) . '/layouts/footer.php'; ?>
 
-<script src="/js/einsatzliste.js"></script>
+<script src="<?= getVersionedAsset('js/einsatzliste.js') ?>"></script>
 
 </body>
 </html>

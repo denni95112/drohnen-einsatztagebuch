@@ -37,7 +37,21 @@ function getVersionedAsset($path) {
     }
     
     $separator = strpos($path, '?') !== false ? '&' : '?';
+    // Use /public/ so assets work with both Apache (.htaccess) and PHP built-in server (project root)
+    $path = '/public/' . ltrim($path, '/');
     return $path . $separator . 'v=' . urlencode($version);
+}
+
+/**
+ * Get URL for the logo image (served via logo.php so it works with any document root).
+ *
+ * @return string URL to the logo script, or empty string if no logo
+ */
+function getLogoUrl() {
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    // Use /public/ so logo works from main app and from updater (project root doc)
+    $base = (strpos($scriptName, '/public/') !== false || strpos($scriptName, '/updater/') !== false) ? '/public' : '';
+    return $base . '/logo.php';
 }
 
 /**

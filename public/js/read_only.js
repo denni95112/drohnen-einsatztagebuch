@@ -46,7 +46,14 @@ function updateTable() {
     if (!einsatzId) return;
     
     fetch(`/api/v1/einsatz/${einsatzId}/dokumentation`)
-        .then(response => response.json())
+        .then(async response => {
+            const raw = await response.text();
+            try {
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                return { success: false, error: { message: 'Ungültige Server-Antwort.' } };
+            }
+        })
         .then(data => {
             if (data.success && data.data) {
                 const eintraege = data.data;

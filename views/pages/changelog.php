@@ -23,7 +23,7 @@ require_once dirname(__DIR__, 2) . '/includes/changelog_data.php';
     <title>Changelog - <?php echo $config['navigation_title']; ?></title>
     <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
     <link rel="stylesheet" href="<?= getVersionedAsset('css/changelog.css') ?>">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/public/manifest.json">
 </head>
 <body>
     <?php include dirname(__DIR__) . '/layouts/header.php'; ?>

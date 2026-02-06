@@ -34,13 +34,13 @@ class DokumentationController extends BaseController {
         
         $data = $this->getRequestData();
         $einsatzId = $data['einsatz_id'] ?? null;
-        $text = $data['text'] ?? '';
+        $text = isset($data['text']) ? (string) $data['text'] : '';
         
         if (!$einsatzId) {
             $this->error('einsatz_id is required', 'VALIDATION_ERROR', 400);
         }
         
-        if (empty(trim($text))) {
+        if (trim($text) === '') {
             $this->error('Text cannot be empty', 'VALIDATION_ERROR', 400);
         }
         

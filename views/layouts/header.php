@@ -44,17 +44,14 @@ if (isset($config['ask_for_install_notification']) && $config['ask_for_install_n
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $basePath = (strpos($scriptName, '/updater/') !== false || strpos($scriptName, '\\updater\\') !== false) ? '../' : '';
         
-        // Ensure logo path is absolute (starts with /) so it works from any page
-        $logoPath = !empty($config['logo_path']) ? $config['logo_path'] : '';
-        if ($logoPath && $logoPath[0] !== '/') {
-            $logoPath = '/' . $logoPath;
-        }
-        
-        $indexPath = $basePath . 'index.php';
-        $logoFullPath = dirname(__DIR__, 2) . '/' . ltrim($config['logo_path'], '/');
+        // Logo URL via logo.php so it works with any document root (public/ or project root)
+        $logoUrl = (!empty($config['logo_path']) && function_exists('getLogoUrl')) ? getLogoUrl() : '';
+        // Logo link: absolute path to index so it works from any page
+        $indexPath = $basePath ? $basePath . 'public/index.php' : '/public/index.php';
+        $logoFullPath = dirname(__DIR__, 2) . '/' . ltrim($config['logo_path'] ?? '', '/');
         if (!empty($config['logo_path']) && file_exists($logoFullPath)): ?>
             <a href="<?= htmlspecialchars($indexPath) ?>" class="header-logo-link">
-                <img src="<?= htmlspecialchars($logoPath) ?>" alt="Logo" class="header-logo">
+                <img src="<?= htmlspecialchars($logoUrl) ?>" alt="Logo" class="header-logo">
             </a>
         <?php endif; ?>
         <h1>Einsatztagebuch <?php echo htmlspecialchars($config['navigation_title']) ?></h1>
@@ -152,5 +149,5 @@ if (isset($config['ask_for_install_notification']) && $config['ask_for_install_n
     // Make config value available to JavaScript
     window.showInstallNotification = true;
 </script>
-            <script src="<?= $basePath ?>js/install_notification.js"></script>
+            <script src="<?= $basePath ? $basePath . 'public/js/install_notification.js' : getVersionedAsset('js/install_notification.js') ?>"></script>
 <?php endif; ?>

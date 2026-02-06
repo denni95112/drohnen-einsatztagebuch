@@ -57,7 +57,7 @@ if (!$einsatz) {
 
 <?php include dirname(__DIR__) . '/layouts/footer.php'; ?>
 
-<script src="/js/read_only.js"></script>
+<script src="<?= getVersionedAsset('js/read_only.js') ?>"></script>
 
 </body>
 </html>

@@ -328,7 +328,7 @@ $databasePath = isset($config['database_path']) ? $config['database_path'] : 'ei
 if (is_absolute_path($databasePath)) {
     $dbFile = $databasePath;
 } else {
-    $dbFile = __DIR__ . '/' . $databasePath;
+    $dbFile = dirname(__DIR__, 2) . '/' . $databasePath;
 }
 
 if (isset($_POST['delete_all_einsaetze'])) {
@@ -346,7 +346,7 @@ if (isset($_POST['delete_all_einsaetze'])) {
     }
 }
 
-if (isset($_GET['download_db'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['download_db'])) {
     if (file_exists($dbFile)) {
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="einsatztagebuch_backup.db"');
@@ -393,7 +393,7 @@ if (isset($_POST['update_unit'])) {
 }
 
 if (isset($_POST['update_password'])) {
-    $config['password_hash'] = hash('sha256', $_POST['admin_passwort']);
+    $config['admin_password_hash'] = hash('sha256', $_POST['admin_passwort']);
     $tempPath = $configPath . '.tmp';
     $configContent = "<?php\nreturn " . var_export($config, true) . ";\n";
     if (file_put_contents($tempPath, $configContent) !== false) {
@@ -519,14 +519,16 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
     <div class="admin-section">
         <h3>📊 Datenbank Verwaltung</h3>
         <div class="admin-actions">
-            <form method="get" class="admin-action-item">
-                <button type="submit" name="download_db" class="btn-action">
+            <form method="get" action="/public/index.php" class="admin-action-item">
+                <input type="hidden" name="page" value="admin">
+                <input type="hidden" name="download_db" value="1">
+                <button type="submit" class="btn-action">
                     <span class="action-icon">⬇️</span>
                     <span>Datenbank herunterladen</span>
                 </button>
             </form>
             
-            <form method="post" enctype="multipart/form-data" class="admin-action-item">
+            <form method="post" action="/public/index.php?page=admin" enctype="multipart/form-data" class="admin-action-item">
                 <label class="file-input-label">
                     <input type="file" name="db_upload" required class="file-input">
                     <span class="file-input-button">📤 Datei auswählen</span>
@@ -619,11 +621,8 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
         <h3>🖼️ Logo Verwaltung</h3>
         
         <?php 
-        $logoFullPathForDisplay = dirname(__DIR__, 2) . '/' . $config['logo_path'];
-        $logoUrlForDisplay = !empty($config['logo_path']) ? $config['logo_path'] : '';
-        if ($logoUrlForDisplay && $logoUrlForDisplay[0] !== '/') {
-            $logoUrlForDisplay = '/' . $logoUrlForDisplay;
-        }
+        $logoFullPathForDisplay = dirname(__DIR__, 2) . '/' . ($config['logo_path'] ?? '');
+        $logoUrlForDisplay = function_exists('getLogoUrl') ? getLogoUrl() : '';
         if (!empty($config['logo_path']) && file_exists($logoFullPathForDisplay)): ?>
         <div class="current-logo">
             <p><strong>Aktuelles Logo:</strong></p>

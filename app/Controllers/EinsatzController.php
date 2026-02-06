@@ -169,7 +169,7 @@ class EinsatzController extends BaseController {
             $dompdf = PDFService::generateReport($id);
             $dompdf->stream("einsatzbericht_" . $id . ".pdf", ["Attachment" => true]);
             exit;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->error($e->getMessage(), 'PDF_GENERATION_ERROR', 500);
         }
     }

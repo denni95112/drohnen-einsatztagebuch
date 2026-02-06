@@ -17,7 +17,12 @@ abstract class BaseController {
             return $_GET;
         }
         
-        // For POST, PUT, DELETE
+        // Use request data set by API router (e.g. nested einsatz/dokumentation POST)
+        // so we get merged data including einsatz_id; php://input can only be read once.
+        if (isset($GLOBALS['_api_request_data']) && is_array($GLOBALS['_api_request_data'])) {
+            return $GLOBALS['_api_request_data'];
+        }
+        
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         
         if (strpos($contentType, 'application/json') !== false) {
@@ -63,5 +68,12 @@ abstract class BaseController {
      */
     protected function error($message, $code = 'ERROR', $statusCode = 400, $details = null) {
         Response::error($message, $code, $statusCode, $details);
+    }
+    
+    /**
+     * Send created response (201)
+     */
+    protected function created($data = null, $message = 'Resource created successfully') {
+        Response::created($data, $message);
     }
 }

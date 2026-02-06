@@ -410,7 +410,8 @@ a.back-btn {
     text-align: center;
 }
 
-a.abschluss-link {
+a.abschluss-link,
+button.abschluss-link {
     display: block;
     width: auto;
     max-width: 400px;

@@ -72,7 +72,7 @@ $einsatzarten = ["Brandeinsatz", "Ölspur", "Öl auf Gewässer", "Personensuche"
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neuer Einsatz starten</title>
     <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
-    <script src="/js/neuer_einsatz.js"></script>
+    <script src="<?= getVersionedAsset('js/neuer_einsatz.js') ?>"></script>
 </head>
 <body>
 <?php include dirname(__DIR__) . '/layouts/header.php'; ?>

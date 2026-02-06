@@ -140,13 +140,15 @@ $method = null;
 $params = [];
 
 if ($resourceId && $action) {
-    // Special route like /einsatz/{id}/complete
+    // Special route like /einsatz/{id}/complete – match literal first, then pattern {id}/action
     $routeKey = $resourceId . '/' . $action;
     if (isset($routeConfig['routes'][$routeKey])) {
         $method = $routeConfig['routes'][$routeKey];
         $params = [$resourceId];
+    } elseif (isset($routeConfig['routes']['{id}/' . $action])) {
+        $method = $routeConfig['routes']['{id}/' . $action];
+        $params = [$resourceId];
     } elseif (isset($routeConfig['routes'][$action])) {
-        // Check if action matches a route pattern
         $method = $routeConfig['routes'][$action];
         $params = [$resourceId];
     }
@@ -197,15 +199,31 @@ if (!$method) {
 
 // Special handling for nested routes
 if ($resource === 'einsatz' && $resourceId && $action === 'dokumentation') {
-    $controller = new DokumentationController();
-    if ($requestMethod === 'GET') {
-        $controller->getByEinsatz($resourceId);
-    } elseif ($requestMethod === 'POST') {
-        // For POST, we need to add einsatz_id to request data
-        $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-        $data['einsatz_id'] = $resourceId;
-        $_POST = $data;
-        $controller->create();
+    try {
+        $controller = new DokumentationController();
+        if ($requestMethod === 'GET') {
+            $controller->getByEinsatz($resourceId);
+        } elseif ($requestMethod === 'POST') {
+            // For POST, we need to add einsatz_id to request data. Store in GLOBALS so
+            // controller getRequestData() can use it (php://input can only be read once).
+            $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+            $data = is_array($data) ? $data : [];
+            $data['einsatz_id'] = $resourceId;
+            $GLOBALS['_api_request_data'] = $data;
+            $controller->create();
+        }
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'error' => [
+                'code' => 'INTERNAL_ERROR',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]
+        ], JSON_UNESCAPED_UNICODE);
     }
     exit;
 }
@@ -224,7 +242,7 @@ $GLOBALS['route_params'] = $params;
 try {
     $controller = new $controllerClass();
     call_user_func_array([$controller, $method], $params);
-} catch (\Exception $e) {
+} catch (\Throwable $e) {
     http_response_code(500);
     header('Content-Type: application/json');
     echo json_encode([
@@ -233,5 +251,5 @@ try {
             'code' => 'INTERNAL_ERROR',
             'message' => $e->getMessage()
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 }

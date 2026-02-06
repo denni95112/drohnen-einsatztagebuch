@@ -35,11 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="login-container">
         <?php 
-        $logoPath = dirname(__DIR__, 2) . '/' . $config['logo_path'];
-        $logoUrl = !empty($config['logo_path']) ? $config['logo_path'] : '';
-        if ($logoUrl && $logoUrl[0] !== '/') {
-            $logoUrl = '/' . $logoUrl;
-        }
+        $logoPath = dirname(__DIR__, 2) . '/' . ($config['logo_path'] ?? '');
+        $logoUrl = function_exists('getLogoUrl') ? getLogoUrl() : '';
         if (!empty($config['logo_path']) && file_exists($logoPath)): ?>
             <img src="<?= htmlspecialchars($logoUrl) ?>" alt="Logo" class="login-logo">
         <?php endif; ?>

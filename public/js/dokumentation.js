@@ -1,5 +1,6 @@
 const einsatzId = parseInt(document.body.getAttribute('data-einsatz-id'));
 const dashboardEnabled = document.body.getAttribute('data-dashboard-enabled') === '1';
+const assetBase = document.body.getAttribute('data-asset-base') || '/public';
 
 function getPilot(element) {
     return element.parentNode.querySelector('.pilot').value;
@@ -51,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
             drohnenData[id] = { startzeit: parseInt(startTime), aktiv: true };
             const icon = div.querySelector('img[src*="flugzeug_start"]');
             if (icon) {
-                icon.src = './img/flugzeug_landung.png';
+                icon.src = assetBase + '/img/flugzeug_landung.png';
                 icon.setAttribute('data-status', 'gestartet');
             }
         }
@@ -134,7 +135,7 @@ function toggleFlight(img) {
 
     if (img.getAttribute("data-status") === "gelandet") {
         text = `${name} mit Pilot ${pilot} und Co-Pilot ${copilot} ist mit Akku ${akku} gestartet.`;
-        img.src = "./img/flugzeug_landung.png";
+        img.src = assetBase + "/img/flugzeug_landung.png";
         img.setAttribute("data-status", "gestartet");
 
         drohnenData[id] = { startzeit: now, aktiv: true };
@@ -154,7 +155,7 @@ function toggleFlight(img) {
         const sec = String(flugdauerSek % 60).padStart(2, '0');
 
         text = `${name} mit Pilot ${pilot} und Co-Pilot ${copilot} ist mit Akku ${akku} gelandet. Flugdauer: ${min} Min ${sec} Sec`;
-        img.src = "./img/flugzeug_start.png";
+        img.src = assetBase + "/img/flugzeug_start.png";
         img.setAttribute("data-status", "gelandet");
 
         delete drohnenData[id];
@@ -180,11 +181,13 @@ function toggleFlight(img) {
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            .then(async response => {
+                const raw = await response.text();
+                try {
+                    return raw ? JSON.parse(raw) : {};
+                } catch (e) {
+                    return {};
                 }
-                return response.json();
             })
             .then(result => {
                 if (result.error) {
@@ -236,7 +239,19 @@ function ajaxQuickInsert(text) {
             text: text
         })
     })
-    .then(response => response.json())
+    .then(async response => {
+        const raw = await response.text();
+        let data;
+        try {
+            data = raw ? JSON.parse(raw) : {};
+        } catch (e) {
+            throw new Error(response.ok ? 'Ungültige Server-Antwort.' : `Fehler: ${response.status}`);
+        }
+        if (!response.ok) {
+            throw new Error(data.error?.message || `Fehler: ${response.status}`);
+        }
+        return data;
+    })
     .then(data => {
         if (data.success && data.data) {
             addEntryToTable(data.data.zeilennummer, data.data.zeitpunkt, data.data.text);
@@ -268,7 +283,19 @@ if (newEntryForm) {
                 text: text
             })
         })
-        .then(response => response.json())
+        .then(async response => {
+            const raw = await response.text();
+            let data;
+            try {
+                data = raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                throw new Error(response.ok ? 'Ungültige Server-Antwort.' : `Fehler: ${response.status}`);
+            }
+            if (!response.ok) {
+                throw new Error(data.error?.message || `Fehler: ${response.status}`);
+            }
+            return data;
+        })
         .then(data => {
             if (data.success && data.data) {
                 addEntryToTable(data.data.zeilennummer, data.data.zeitpunkt, data.data.text);
@@ -278,7 +305,80 @@ if (newEntryForm) {
             }
         })
         .catch(error => {
-            alert("Netzwerkfehler beim Speichern des Eintrags.");
+            alert(error.message || "Netzwerkfehler beim Speichern des Eintrags.");
+            console.error('Error:', error);
+        });
+    });
+}
+
+// PDF herunterladen – fetch then blob/download, bei Fehler Fehlermeldung anzeigen
+document.querySelectorAll('button[data-action="pdf"]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-einsatz-id');
+        const url = `/api/v1/einsatz/${id}/pdf`;
+        fetch(url)
+            .then(response => {
+                if (response.ok) {
+                    return response.blob().then(blob => {
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = 'einsatzbericht_' + id + '.pdf';
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                    });
+                }
+                return response.text().then(text => {
+                    let msg = 'Fehler: ' + response.status;
+                    try {
+                        const data = text ? JSON.parse(text) : {};
+                        if (data.error && data.error.message) msg = data.error.message;
+                    } catch (e) { /* use status msg */ }
+                    throw new Error(msg);
+                });
+            })
+            .catch(err => {
+                alert(err.message || 'PDF konnte nicht erstellt werden.');
+            });
+    });
+});
+
+// "Einsatz abschließen" – POST then redirect (API expects POST, not GET)
+const completeBtn = document.querySelector('button[data-action="complete"]');
+if (completeBtn) {
+    completeBtn.addEventListener('click', function() {
+        if (!confirm('Einsatz wirklich abschließen?')) return;
+        const id = this.getAttribute('data-einsatz-id');
+        const redirectUrl = window.location.pathname + window.location.search;
+        fetch(`/api/v1/einsatz/${id}/complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            },
+            body: JSON.stringify({})
+        })
+        .then(async response => {
+            const raw = await response.text();
+            let data;
+            try {
+                data = raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                throw new Error(response.ok ? 'Ungültige Server-Antwort.' : `Fehler: ${response.status}`);
+            }
+            if (!response.ok) {
+                throw new Error(data.error?.message || `Fehler: ${response.status}`);
+            }
+            return data;
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.href = redirectUrl;
+            } else {
+                alert('Fehler: ' + (data.error?.message || 'Unbekannter Fehler'));
+            }
+        })
+        .catch(error => {
+            alert(error.message || 'Netzwerkfehler.');
             console.error('Error:', error);
         });
     });

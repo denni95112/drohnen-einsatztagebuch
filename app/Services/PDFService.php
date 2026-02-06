@@ -2,7 +2,6 @@
 namespace App\Services;
 
 use App\Models\Einsatz;
-use Dompdf\Dompdf;
 
 /**
  * PDF generation service
@@ -29,9 +28,20 @@ class PDFService {
         
         $html = self::buildHTML($einsatz, $personal, $dokumentationEntries, $config);
         
-        require_once dirname(__DIR__, 2) . '/lib/dompdf/autoload.inc.php';
+        if (!function_exists('mb_internal_encoding')) {
+            throw new \Exception('Die PHP-Erweiterung "mbstring" ist erforderlich für die PDF-Erstellung. Bitte mbstring aktivieren (z. B. unter Linux: php-mbstring installieren).');
+        }
+        if (!class_exists('DOMImplementation')) {
+            throw new \Exception('Die PHP-Erweiterung "dom" (DOM/XML) ist erforderlich für die PDF-Erstellung. Bitte die dom-Erweiterung aktivieren (z. B. unter Linux: php-xml installieren).');
+        }
         
-        $dompdf = new Dompdf();
+        $dompdfAutoload = dirname(__DIR__, 2) . '/lib/dompdf/autoload.inc.php';
+        if (!is_file($dompdfAutoload)) {
+            throw new \Exception('PDF-Bibliothek (dompdf) ist nicht installiert. Bitte in der Administration unter "Bibliotheken" installieren.');
+        }
+        require_once $dompdfAutoload;
+        
+        $dompdf = new \Dompdf\Dompdf();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
@@ -43,15 +53,19 @@ class PDFService {
      * Build HTML for PDF
      */
     private static function buildHTML($einsatz, $personal, $dokumentation, $config) {
-        $html = "<h1>Einsatzbericht {$config['navigation_title']}</h1>";
-        $html .= "<p><strong>Einsatznummer:</strong> {$einsatz['einsatznummer']}</p>";
-        $html .= "<p><strong>Adresse:</strong> {$einsatz['adresse']}</p>";
-        $html .= "<p><strong>GPS-Koordinaten:</strong> {$einsatz['gps_lat']}, {$einsatz['gps_lng']}</p>";
-        $html .= "<p><strong>Art des Einsatzes:</strong> {$einsatz['einsatzart']}</p>";
-        $html .= "<p><strong>Gruppenführer:</strong> {$einsatz['gruppenfuehrer']}</p>";
-        $html .= "<p><strong>Dokumentierende Person:</strong> {$einsatz['dokumentierende']}</p>";
-        $html .= "<p><strong>Beginn:</strong> {$einsatz['startzeit']}</p>";
-        $html .= "<p><strong>Ende:</strong> {$einsatz['endzeit']}</p>";
+        $e = function ($key) use ($einsatz) {
+            return htmlspecialchars((string)($einsatz[$key] ?? ''), ENT_QUOTES, 'UTF-8');
+        };
+        $navTitle = htmlspecialchars((string)($config['navigation_title'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $html = '<h1>Einsatzbericht ' . $navTitle . '</h1>';
+        $html .= '<p><strong>Einsatznummer:</strong> ' . $e('einsatznummer') . '</p>';
+        $html .= '<p><strong>Adresse:</strong> ' . $e('adresse') . '</p>';
+        $html .= '<p><strong>GPS-Koordinaten:</strong> ' . $e('gps_lat') . ', ' . $e('gps_lng') . '</p>';
+        $html .= '<p><strong>Art des Einsatzes:</strong> ' . $e('einsatzart') . '</p>';
+        $html .= '<p><strong>Gruppenführer:</strong> ' . $e('gruppenfuehrer') . '</p>';
+        $html .= '<p><strong>Dokumentierende Person:</strong> ' . $e('dokumentierende') . '</p>';
+        $html .= '<p><strong>Beginn:</strong> ' . $e('startzeit') . '</p>';
+        $html .= '<p><strong>Ende:</strong> ' . $e('endzeit') . '</p>';
         $html .= "<hr>";
         $html .= "<h2>Anwesendes Personal</h2>";
         $html .= "<table width='100%' border='1' cellpadding='5' cellspacing='0'><tr><th>Name</th></tr>";

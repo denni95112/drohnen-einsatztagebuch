@@ -21,7 +21,7 @@ if (isset($config['timezone'])) {
     <title>Über - <?php echo $config['navigation_title']; ?></title>
     <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
     <link rel="stylesheet" href="<?= getVersionedAsset('css/about.css') ?>">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/public/manifest.json">
 </head>
 <body>
     <?php include dirname(__DIR__) . '/layouts/header.php'; ?>

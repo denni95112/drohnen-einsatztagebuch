@@ -93,7 +93,7 @@
             
             let response;
             try {
-                response = await fetch('install_notification_api.php', {
+                response = await fetch('/api/v1/install_notification', {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'

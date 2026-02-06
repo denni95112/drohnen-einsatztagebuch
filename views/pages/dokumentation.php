@@ -73,7 +73,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
     <link rel="stylesheet" href="<?= getVersionedAsset('css/styles.css') ?>">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(getCSRFToken(), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
-<body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>" data-dashboard-enabled="<?= $dashboardEnabled ? '1' : '0' ?>">
+<body data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>" data-dashboard-enabled="<?= $dashboardEnabled ? '1' : '0' ?>" data-asset-base="/public">
 <?php include dirname(__DIR__) . '/layouts/header.php'; ?>
 <h2>Einsatz-Dokumentation (#<?= htmlspecialchars($einsatz['einsatznummer']) ?>)</h2>
 
@@ -130,9 +130,9 @@ $anwesendMap = array_flip($personal_anwesend_ids);
         Akku:<br>
         <input type="text" class="akku" placeholder="Akku-Nummer" oninput="saveQuickData(this)"><br>
         <br>   
-        <img src="/img/flugzeug_start.png" data-status="gelandet" onclick="toggleFlight(this)">
-        <img src="/img/personensuche.png" onclick="insertQuickText(getDrohnentext(this, ' meldet Person gefunden.'))">
-        <img src="/img/warnung.png" onclick="insertQuickText(getDrohnentext(this, ' meldet technische Störung.'))">
+        <img src="/public/img/flugzeug_start.png" data-status="gelandet" onclick="toggleFlight(this)">
+        <img src="/public/img/personensuche.png" onclick="insertQuickText(getDrohnentext(this, ' meldet Person gefunden.'))">
+        <img src="/public/img/warnung.png" onclick="insertQuickText(getDrohnentext(this, ' meldet technische Störung.'))">
 
         <div class="flugdauer">Flugdauer: 00:00</div>
     </div>
@@ -141,7 +141,8 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
     <br><br>
 
-    <form id="newEntryForm">
+    <form id="newEntryForm" method="post" action="<?= htmlspecialchars($_SERVER['REQUEST_URI'] ?? '') ?>">
+        <input type="hidden" name="eintrag_speichern" value="1">
         <textarea name="text" id="textEntry" required placeholder="Neuer Eintrag"></textarea>
         <button type="submit">Eintrag hinzufügen</button>
     </form>
@@ -168,10 +169,10 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 </table>
 
 <?php if (!$einsatz_abgeschlossen): ?>
-    <a class="abschluss-link" href="/api/v1/einsatz/<?= htmlspecialchars($einsatz_id) ?>/complete" onclick="return confirm('Einsatz wirklich abschließen?')">Einsatz abschließen</a>
-    <a class="abschluss-link" href="/api/v1/einsatz/<?= htmlspecialchars($einsatz_id) ?>/pdf">PDF erstellen</a>
+    <button type="button" class="abschluss-link" data-action="complete" data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>">Einsatz abschließen</button>
+    <button type="button" class="abschluss-link" data-action="pdf" data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>">PDF erstellen</button>
 <?php else: ?>
-    <a class="abschluss-link" href="/api/v1/einsatz/<?= htmlspecialchars($einsatz_id) ?>/pdf">PDF erneut herunterladen (Einsatz abgeschlossen)</a>
+    <button type="button" class="abschluss-link" data-action="pdf" data-einsatz-id="<?= htmlspecialchars($einsatz_id) ?>">PDF erneut herunterladen (Einsatz abgeschlossen)</button>
 <?php endif; ?>
 
 <br><br><br><br>
@@ -179,7 +180,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
 <?php include dirname(__DIR__) . '/layouts/footer.php'; ?>
 
-<script src="/js/dokumentation.js"></script>
+<script src="<?= getVersionedAsset('js/dokumentation.js') ?>"></script>
 
 </body>
 </html>
