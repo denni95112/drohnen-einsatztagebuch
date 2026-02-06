@@ -37,7 +37,7 @@
 
     <?php if ($letzter_einsatz): ?>
         <?php
-        $read_only_url = $config['domain'] . "/public/index.php?page=read_only&einsatz_id=" . htmlspecialchars($letzter_einsatz) . "&token=" . $config['read_token'];
+        $read_only_url = getBaseUrl() . "/public/index.php?page=read_only&einsatz_id=" . htmlspecialchars($letzter_einsatz) . "&token=" . $config['read_token'];
         ?>
         <div class="qr-container">
             <p><strong>QR-Code für den Lese-Modus:</strong></p>

@@ -43,6 +43,20 @@ function getVersionedAsset($path) {
 }
 
 /**
+ * Get current request base URL (scheme + host, no path).
+ * Used for absolute URLs (e.g. QR code) so no config 'domain' is needed.
+ *
+ * @return string e.g. "http://localhost:8001"
+ */
+function getBaseUrl() {
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+        || (!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] === 'https');
+    $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+    return ($https ? 'https' : 'http') . '://' . $host;
+}
+
+/**
  * Get URL for the logo image (served via logo.php so it works with any document root).
  *
  * @return string URL to the logo script, or empty string if no logo

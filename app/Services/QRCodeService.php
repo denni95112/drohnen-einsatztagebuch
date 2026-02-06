@@ -22,13 +22,12 @@ class QRCodeService {
     }
     
     /**
-     * Generate QR code URL for read-only mode
+     * Generate QR code URL for read-only mode (uses current request host, no config domain needed)
      */
     public static function generateReadOnlyUrl($einsatzId) {
         $configPath = dirname(__DIR__, 2) . '/config/config.php';
         $config = include $configPath;
-        
-        $readOnlyUrl = $config['domain'] . "/read_only.php?einsatz_id=" . $einsatzId . "&token=" . $config['read_token'];
-        return $readOnlyUrl;
+        $baseUrl = function_exists('getBaseUrl') ? getBaseUrl() : ('http://' . ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        return $baseUrl . "/public/index.php?page=read_only&einsatz_id=" . $einsatzId . "&token=" . ($config['read_token'] ?? '');
     }
 }

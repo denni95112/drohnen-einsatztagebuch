@@ -9,7 +9,6 @@ return [
     'password_hash' => 'GENERATE_HASH_FROM_PASSWORD',
     'admin_password_hash' => 'GENERATE_HASH_FROM_ADMIN_PASSWORD',
     'read_token' => 'GENERATE_READ_TOKEN',
-    'domain' => 'your-domain.com',
     'database_path' => 'einsatzbuch.db',
     // Optional:
     // 'logo_path' => 'uploads/logo_filename.png',

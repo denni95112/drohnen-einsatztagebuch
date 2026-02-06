@@ -521,8 +521,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
     $passwordHash = hash('sha256', $_POST['passwort']);
     $adminPasswordHash = hash('sha256', $_POST['admin_passwort']);
     $readToken = generateToken(16);
-    $domain = $_SERVER['HTTP_HOST'];
-    
+
     $logo_path = '';
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
@@ -585,7 +584,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
         "    'password_hash' => '" . $passwordHash . "',\n" .
         "    'admin_password_hash' => '" . $adminPasswordHash . "',\n" .
         "    'read_token' => '" . $readToken . "',\n" .
-        "    'domain' => '" . addslashes($domain) . "',\n" .
         "    'database_path' => '" . $database_path_escaped . "',\n";
     
     // Add logo_path if it was uploaded and saved successfully

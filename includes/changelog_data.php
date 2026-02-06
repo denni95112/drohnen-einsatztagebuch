@@ -7,7 +7,7 @@
 $changelog = [
     [
         'version' => '1.1.0',
-        'date' => '2026-01-XX',
+        'date' => '2026-02-XX',
         'changes' => [
             'Vollständige Code-Umstrukturierung mit MVC-Pattern',
             'RESTful API-Architektur implementiert',
@@ -24,9 +24,7 @@ $changelog = [
             'Verbesserte Code-Organisation und Wartbarkeit'
         ],
         'bugfixes' => [
-            'Korrigierte Pfade in allen View-Dateien',
-            'Korrigierte API-Endpunkt-Referenzen in JavaScript',
-            'Behobene Redirects nach Umstrukturierung'
+
         ],
         'new_features' => [
             'RESTful API für alle Funktionen',
