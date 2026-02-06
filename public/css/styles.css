@@ -642,6 +642,85 @@ input[type="checkbox"] {
     margin: 0;
 }
 
+.dashboard-token-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    max-width: 400px;
+}
+
+/* API-Token: takes most of the row; clearly a text input */
+.dashboard-token-row input {
+    flex: 1 1 0%;
+    min-width: 0;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff !important;
+    color: #1e293b !important;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-token-row input::placeholder {
+    color: #94a3b8;
+}
+
+.dashboard-token-row input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Show/hide token: fixed small width so the input gets the rest of the row */
+.dashboard-token-row .btn-action-inline {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    padding: 0.5rem;
+    justify-content: center;
+    align-self: center;
+}
+
+.dashboard-token-set-hint {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    color: #059669;
+}
+
+.dashboard-api-status {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.dashboard-api-status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.dashboard-api-status-ok {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.dashboard-api-status-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.dashboard-api-notice {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #e0f2fe;
+    color: #0c4a6e;
+    border-radius: 8px;
+    border: 1px solid #7dd3fc;
+}
+
 .btn-action {
     display: inline-flex;
     align-items: center;

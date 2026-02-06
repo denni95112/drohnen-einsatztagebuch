@@ -27,13 +27,17 @@ class FlightsController extends BaseController {
         }
         
         try {
+            $locationId = isset($data['location_id']) && $data['location_id'] !== '' && $data['location_id'] !== null
+                ? (int)$data['location_id']
+                : null;
             DashboardIntegrationService::insertFlight(
                 $data['pilot'],
                 $data['copilot'] ?? '',
                 (int)$data['drone_id'],
                 (int)$data['battery_number'],
                 $data['flight_start'],
-                $data['flight_end']
+                $data['flight_end'],
+                $locationId
             );
             
             $this->created(null, 'Flight inserted successfully');

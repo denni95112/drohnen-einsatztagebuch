@@ -12,6 +12,47 @@ AuthService::requireAdminAuth();
 $config = include dirname(__DIR__, 2) . '/config/config.php';
 $db = Database::getInstance()->getConnection();
 
+// AJAX: Test Dashboard API connection (before any output)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === 'test_dashboard_api') {
+    header('Content-Type: application/json; charset=utf-8');
+    $url = trim($_POST['dashboard_api_url'] ?? '');
+    $token = trim($_POST['dashboard_api_token'] ?? '');
+    if ($url === '') {
+        echo json_encode(['success' => false, 'error' => 'Bitte API-URL eingeben.']);
+        exit;
+    }
+    if ($token === '') {
+        $token = trim($config['dashboard_api_token'] ?? '');
+    }
+    if ($token === '') {
+        echo json_encode(['success' => false, 'error' => 'Bitte API-Token eingeben oder zuerst speichern.']);
+        exit;
+    }
+    $baseUrl = rtrim(preg_replace('#/+$#', '', $url), '/');
+    $testUrl = $baseUrl . '/api/pilots.php?action=list';
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $testUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    if ($response === false) {
+        echo json_encode(['success' => false, 'error' => 'Verbindung fehlgeschlagen: ' . $curlError]);
+        exit;
+    }
+    $data = json_decode($response, true);
+    if ($httpCode === 200 && isset($data['success']) && $data['success'] === true) {
+        echo json_encode(['success' => true, 'message' => 'Verbindung erfolgreich.']);
+        exit;
+    }
+    $errMsg = isset($data['error']) ? $data['error'] : ('HTTP ' . $httpCode);
+    echo json_encode(['success' => false, 'error' => $errMsg]);
+    exit;
+}
+
 // Library installation functions (reused from setup.php logic)
 if (!function_exists('getAllLibraries')) {
     function getAllLibraries() {
@@ -409,6 +450,22 @@ if (isset($_POST['update_password'])) {
     }
 }
 
+if (isset($_POST['save_dashboard_api'])) {
+    require_once dirname(__DIR__, 2) . '/utils.php';
+    $apiUrl = trim($_POST['dashboard_api_url'] ?? '');
+    $apiToken = trim($_POST['dashboard_api_token'] ?? '');
+    $configPath = dirname(__DIR__, 2) . '/config/config.php';
+    $configToWrite = file_exists($configPath) ? (array) include $configPath : [];
+    $configToWrite['dashboard_api_url'] = $apiUrl;
+    if ($apiToken !== '') {
+        $configToWrite['dashboard_api_token'] = $apiToken;
+    }
+    if (writeConfig($configToWrite)) {
+        header("Location: /public/index.php?page=admin&success=dashboard_api_gespeichert");
+        exit;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
     $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
     $fileType = $_FILES['logo']['type'];
@@ -507,7 +564,8 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
             "passwort_geaendert" => "Passwort wurde geändert!",
             "logo_geaendert" => "Logo erfolgreich hochgeladen!",
             "logo_geloescht" => "Logo erfolgreich gelöscht!",
-            "libs_reinstalled" => "Bibliotheken erfolgreich neu installiert!"
+            "libs_reinstalled" => "Bibliotheken erfolgreich neu installiert!",
+            "dashboard_api_gespeichert" => "Dashboard-API-Einstellungen gespeichert. API-Token ist aktiv – Personal und Drohnen werden vom Flug-Dienstbuch geladen."
         ];
         echo $messages[$_GET['success']] ?? "Aktion erfolgreich!";
         ?>
@@ -572,6 +630,36 @@ if (isset($_POST['delete_logo']) && !empty($config['logo_path'])) {
             <label>Admin Passwort ändern:</label>
             <input type="password" name="admin_passwort" placeholder="Neues Passwort eingeben" required>
             <button type="submit" name="update_password" class="btn-action-inline">🔒 Passwort ändern</button>
+        </form>
+    </div>
+
+    <!-- Dashboard-Integration (Flug-Dienstbuch API) -->
+    <div class="admin-section">
+        <h3>🔗 Dashboard-Integration (Flug-Dienstbuch)</h3>
+        <p>Optional: Verbindung zum <strong>Drohnen-Flug-und-Dienstbuch</strong> per API (Token). Wenn konfiguriert, werden Piloten, Drohnen und Flugstandorte von dort geladen und Flüge per API übertragen. Ansonsten kann weiterhin der Datenbank-Pfad (Setup) genutzt werden.</p>
+        <?php
+        $configPath = dirname(__DIR__, 2) . '/config/config.php';
+        $configDashboard = file_exists($configPath) ? (array) include $configPath : [];
+        $dashboardApiUrl = isset($configDashboard['dashboard_api_url']) ? (string) $configDashboard['dashboard_api_url'] : '';
+        $dashboardApiTokenSet = !empty($configDashboard['dashboard_api_token'] ?? '');
+        $dashboardApiConnected = $dashboardApiUrl !== '' && $dashboardApiTokenSet;
+        ?>
+        <form method="post" id="dashboard-api-form" class="admin-form-item">
+            <label for="dashboard_api_url">API-Basis-URL (Flug-Dienstbuch)</label>
+            <input type="url" id="dashboard_api_url" name="dashboard_api_url" value="<?= htmlspecialchars($dashboardApiUrl) ?>" placeholder="z. B. https://mein-server.de/flug-dienstbuch" style="max-width: 400px; width: 100%; padding: 0.5rem;">
+            <label for="dashboard_api_token" style="margin-top: 0.75rem;">API-Token</label>
+            <div class="dashboard-token-row">
+                <input type="password" id="dashboard_api_token" name="dashboard_api_token" placeholder="<?= $dashboardApiTokenSet ? '•••••••• (leer lassen = unverändert)' : 'Token aus dem Flug-Dienstbuch (Admin → API-Tokens)' ?>" autocomplete="off">
+                <button type="button" id="dashboard-api-token-toggle" class="btn-action-inline" title="Anzeigen/Verbergen">👁</button>
+            </div>
+            <?php if ($dashboardApiTokenSet): ?>
+            <p class="dashboard-token-set-hint">✓ API-Token ist gespeichert. Personal, Drohnen und Flugstandorte werden vom Flug-Dienstbuch geladen.</p>
+            <?php endif; ?>
+            <div class="admin-actions" style="margin-top: 0.75rem;">
+                <button type="submit" name="save_dashboard_api" class="btn-action">💾 Einstellungen speichern</button>
+                <button type="button" id="dashboard-api-test-btn" class="btn-action">🔌 Verbindung testen</button>
+            </div>
+            <div id="dashboard-api-status" class="dashboard-api-status" style="display: none;"></div>
         </form>
     </div>
 
@@ -678,6 +766,53 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Dashboard API: token visibility toggle
+    const tokenInput = document.getElementById('dashboard_api_token');
+    const tokenToggle = document.getElementById('dashboard-api-token-toggle');
+    if (tokenToggle && tokenInput) {
+        tokenToggle.addEventListener('click', function() {
+            if (tokenInput.type === 'password') {
+                tokenInput.type = 'text';
+                tokenToggle.textContent = '🙈';
+            } else {
+                tokenInput.type = 'password';
+                tokenToggle.textContent = '👁';
+            }
+        });
+    }
+
+    // Dashboard API: test connection
+    const dashboardTestBtn = document.getElementById('dashboard-api-test-btn');
+    const dashboardApiForm = document.getElementById('dashboard-api-form');
+    const dashboardApiStatus = document.getElementById('dashboard-api-status');
+    if (dashboardTestBtn && dashboardApiForm && dashboardApiStatus) {
+        dashboardTestBtn.addEventListener('click', function() {
+            var url = document.getElementById('dashboard_api_url').value.trim();
+            var token = document.getElementById('dashboard_api_token').value.trim();
+            dashboardApiStatus.style.display = 'block';
+            dashboardApiStatus.className = 'dashboard-api-status dashboard-api-status-pending';
+            dashboardApiStatus.textContent = 'Prüfe Verbindung…';
+            var formData = new FormData();
+            formData.append('ajax', 'test_dashboard_api');
+            formData.append('dashboard_api_url', url);
+            formData.append('dashboard_api_token', token);
+            fetch(dashboardApiForm.action || '/public/index.php?page=admin', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                dashboardApiStatus.className = 'dashboard-api-status ' + (data.success ? 'dashboard-api-status-ok' : 'dashboard-api-status-error');
+                dashboardApiStatus.textContent = data.success ? (data.message || 'Verbindung erfolgreich.') : (data.error || 'Fehler');
+            })
+            .catch(function() {
+                dashboardApiStatus.className = 'dashboard-api-status dashboard-api-status-error';
+                dashboardApiStatus.textContent = 'Netzwerkfehler.';
+            });
+        });
+    }
+
     // Library reinstallation form handler
     const libReinstallForm = document.getElementById('libReinstallForm');
     if (libReinstallForm) {

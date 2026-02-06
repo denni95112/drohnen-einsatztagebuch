@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Models\Drohne;
+use App\Services\DashboardApiService;
 use App\Utils\Validator;
 use App\Middleware\AuthMiddleware;
 
@@ -14,6 +15,12 @@ class DrohnenController extends BaseController {
      */
     public function index() {
         AuthMiddleware::handle(true);
+        
+        if (DashboardApiService::isApiEnabled()) {
+            $drohnen = DashboardApiService::getDrones();
+            $this->success($drohnen);
+            return;
+        }
         
         $model = new Drohne();
         $drohnen = $model->getAllOrdered();
@@ -43,6 +50,11 @@ class DrohnenController extends BaseController {
     public function create() {
         AuthMiddleware::handle(true);
         
+        if (DashboardApiService::isApiEnabled()) {
+            $this->error('Drohnen werden über das Flug-Dienstbuch verwaltet.', 'API_MANAGED', 403);
+            return;
+        }
+        
         if ($this->getMethod() !== 'POST') {
             $this->error('Method not allowed', 'METHOD_NOT_ALLOWED', 405);
         }
@@ -70,6 +82,11 @@ class DrohnenController extends BaseController {
      */
     public function update($id) {
         AuthMiddleware::handle(true);
+        
+        if (DashboardApiService::isApiEnabled()) {
+            $this->error('Drohnen werden über das Flug-Dienstbuch verwaltet.', 'API_MANAGED', 403);
+            return;
+        }
         
         if ($this->getMethod() !== 'PUT' && $this->getMethod() !== 'POST') {
             $this->error('Method not allowed', 'METHOD_NOT_ALLOWED', 405);
@@ -103,6 +120,11 @@ class DrohnenController extends BaseController {
      */
     public function delete($id) {
         AuthMiddleware::handle(true);
+        
+        if (DashboardApiService::isApiEnabled()) {
+            $this->error('Drohnen werden über das Flug-Dienstbuch verwaltet.', 'API_MANAGED', 403);
+            return;
+        }
         
         if ($this->getMethod() !== 'DELETE' && $this->getMethod() !== 'POST') {
             $this->error('Method not allowed', 'METHOD_NOT_ALLOWED', 405);

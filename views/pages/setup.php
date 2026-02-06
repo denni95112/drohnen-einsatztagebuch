@@ -252,7 +252,10 @@ function checkLibraries() {
         return ['success' => true];
     }
 
-require_once 'utils.php';
+// utils.php is already loaded by index.php; use full path for when setup runs standalone (e.g. POST handlers)
+if (!function_exists('getVersionedAsset')) {
+    require_once dirname(__DIR__, 2) . '/utils.php';
+}
     
 /**
  * Recursively remove a directory and its contents
@@ -608,7 +611,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_config'])) {
 
     file_put_contents($configPath, $config);
 
-    require_once 'db.php';
+    require_once dirname(__DIR__, 2) . '/db.php';
+
+    // Notify install tracking webhook (fire-and-forget)
+    require_once dirname(__DIR__, 2) . '/includes/version.php';
+    require_once dirname(__DIR__, 2) . '/utils.php';
+    sendInstallTrackingWebhook(GITHUB_REPO_NAME, (string) APP_VERSION);
 
     header("Location: /public/index.php?page=login");
     exit;

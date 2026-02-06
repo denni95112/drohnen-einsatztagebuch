@@ -5,6 +5,7 @@
 require_once dirname(__DIR__, 2) . '/bootstrap.php';
 
 use App\Services\AuthService;
+use App\Services\DashboardApiService;
 use App\Models\Einsatz;
 use App\Models\Dokumentation;
 use App\Models\Personal;
@@ -13,7 +14,8 @@ use App\Models\Drohne;
 AuthService::requireAuth();
 
 $config = include dirname(__DIR__, 2) . '/config/config.php';
-$dashboardEnabled = !empty($config['path_to_dashboard_db']);
+$dashboardApiManaged = DashboardApiService::isApiEnabled();
+$dashboardEnabled = $dashboardApiManaged || !empty($config['path_to_dashboard_db']);
 
 if (!isset($_GET['einsatz_id'])) {
     die("Keine Einsatz-ID angegeben.");
@@ -46,7 +48,7 @@ $einsatz_abgeschlossen = !empty($einsatz['endzeit']);
 $personal = $einsatzModel->getPersonnel($einsatz_id);
 
 $drohnenModel = new Drohne();
-$drohnen = $drohnenModel->getAllOrdered();
+$drohnen = $dashboardApiManaged ? DashboardApiService::getDrones() : $drohnenModel->getAllOrdered();
 
 $dokumentationModel = new Dokumentation();
 $eintraege = $dokumentationModel->getByEinsatzId($einsatz_id, 'DESC');
@@ -59,7 +61,9 @@ if (isset($_POST['personal_aktualisieren'])) {
 }
 
 $personalModel = new Personal();
-$personal_gesamt = $personalModel->getAllOrdered();
+$personal_gesamt = $dashboardApiManaged ? DashboardApiService::getPilots() : $personalModel->getAllOrdered();
+
+$locations = $dashboardApiManaged ? DashboardApiService::getLocations() : [];
 
 $personal_anwesend_ids = array_column($personal, 'id');
 $anwesendMap = array_flip($personal_anwesend_ids);
@@ -81,7 +85,9 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
     <div class="accordion-tabs-container">
         <button class="accordion">Einsatznummer aktualisieren</button>
+        <?php if (!$dashboardApiManaged): ?>
         <button class="accordion">Anwesendes Personal aktualisieren</button>
+        <?php endif; ?>
     </div>
     
     <div class="panel">
@@ -91,6 +97,7 @@ $anwesendMap = array_flip($personal_anwesend_ids);
         </form>
     </div>
 
+    <?php if (!$dashboardApiManaged): ?>
     <div class="panel">
         <form method="post">
             <?php 
@@ -98,18 +105,23 @@ $anwesendMap = array_flip($personal_anwesend_ids);
                 <label>
                     <input type="checkbox" name="personal[]" value="<?= $p['id'] ?>"
                     <?= isset($anwesendMap[$p['id']]) ? 'checked' : '' ?>>
-                    <?= htmlspecialchars($p['vorname'].' '.$p['nachname']) ?>
+                    <?= htmlspecialchars(($p['vorname'] ?? '').' '.($p['nachname'] ?? '')) ?>
                 </label>
             <?php endforeach; ?>
             <button type="submit" name="personal_aktualisieren">Personal speichern</button>
         </form>
     </div>
+    <?php endif; ?>
 
     <h3>Quick Actions</h3>
     <?php 
+    $personalForDropdown = $dashboardApiManaged ? $personal_gesamt : $personal;
     $personalOptions = '';
-    foreach ($personal as $p) {
-        $name = htmlspecialchars($p['vorname'] . ' ' . $p['nachname']);
+    foreach ($personalForDropdown as $p) {
+        $name = htmlspecialchars(($p['vorname'] ?? '') . ' ' . ($p['nachname'] ?? ''));
+        if (trim($name) === '') {
+            $name = htmlspecialchars($p['name'] ?? '');
+        }
         $personalOptions .= "<option value=\"{$name}\">{$name}</option>\n            ";
     }
     ?>
@@ -126,6 +138,16 @@ $anwesendMap = array_flip($personal_anwesend_ids);
         <select class="copilot" onchange="saveQuickData(this)">
             <?= $personalOptions ?>
         </select><br>
+
+        <?php if (!empty($locations)): ?>
+        Flugstandort:<br>
+        <select class="flugstandort" onchange="saveQuickData(this)">
+            <option value="">— auswählen —</option>
+            <?php foreach ($locations as $loc): ?>
+            <option value="<?= (int)($loc['id'] ?? 0) ?>"><?= htmlspecialchars($loc['location_name'] ?? '') ?></option>
+            <?php endforeach; ?>
+        </select><br>
+        <?php endif; ?>
 
         Akku:<br>
         <input type="text" class="akku" placeholder="Akku-Nummer" oninput="saveQuickData(this)"><br>

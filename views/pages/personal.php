@@ -5,17 +5,23 @@
 require_once dirname(__DIR__, 2) . '/bootstrap.php';
 
 use App\Services\AuthService;
+use App\Services\DashboardApiService;
 use App\Models\Personal;
 
 AuthService::requireAdminAuth();
 
 $config = include dirname(__DIR__, 2) . '/config/config.php';
-$dashboardEnabled = !empty($config['path_to_dashboard_db']);
+$dashboardApiManaged = DashboardApiService::isApiEnabled();
+$dashboardEnabled = $dashboardApiManaged || !empty($config['path_to_dashboard_db']);
 
 $personalModel = new Personal();
 
 try {
-    if(isset($_POST['add'])){
+    if ($dashboardApiManaged) {
+        $personal = DashboardApiService::getPilots();
+        $edit_personal = null;
+    } else {
+    if (isset($_POST['add'])) {
         $vorname = $_POST['vorname'] ?? '';
         $nachname = $_POST['nachname'] ?? '';
         $dashboard_id = $_POST['dashboard_id'] ?? null;
@@ -35,18 +41,18 @@ try {
         exit;
     }
 
-    if(isset($_GET['delete'])){
+    if (isset($_GET['delete'])) {
         $personalModel->delete($_GET['delete']);
         header("Location: /public/index.php?page=personal");
         exit;
     }
 
     $edit_personal = null;
-    if(isset($_GET['edit'])){
+    if (isset($_GET['edit'])) {
         $edit_personal = $personalModel->find($_GET['edit']);
     }
 
-    if(isset($_POST['update'])){
+    if (isset($_POST['update'])) {
         $vorname = $_POST['vorname'] ?? '';
         $nachname = $_POST['nachname'] ?? '';
         $dashboard_id = $_POST['dashboard_id'] ?? null;
@@ -72,6 +78,7 @@ try {
     }
 
     $personal = $personalModel->getAllOrdered();
+    }
 
 } catch (PDOException $e) {
     echo "<pre>Datenbankfehler: " . $e->getMessage() . "</pre>";
@@ -94,6 +101,11 @@ try {
 <?php include dirname(__DIR__) . '/layouts/header.php'; ?>
 <h2>Personalverwaltung</h2>
 
+<?php if ($dashboardApiManaged): ?>
+<p class="dashboard-api-notice">Diese Daten werden vom <strong>Flug-Dienstbuch</strong> per API bereitgestellt. Bearbeitung nur im Flug-Dienstbuch möglich.</p>
+<?php endif; ?>
+
+<?php if (!$dashboardApiManaged): ?>
 <form method="post" action="/public/index.php?page=personal">
     <input type="hidden" name="id" value="<?= $edit_personal['id'] ?? '' ?>">
 
@@ -116,6 +128,7 @@ try {
         <button type="submit" name="add">Personal hinzufügen</button>
     <?php endif; ?>
 </form>
+<?php endif; ?>
 
 <table>
     <thead>
@@ -126,7 +139,9 @@ try {
             <?php if ($dashboardEnabled): ?>
             <th>Dashboard ID</th>
             <?php endif; ?>
+            <?php if (!$dashboardApiManaged): ?>
             <th>Aktionen</th>
+            <?php endif; ?>
         </tr>
     </thead>
     <tbody>
@@ -136,12 +151,14 @@ try {
                 <td><?= htmlspecialchars($p['vorname']) ?></td>
                 <td><?= htmlspecialchars($p['nachname']) ?></td>
                 <?php if ($dashboardEnabled): ?>
-                <td><?= htmlspecialchars($p['dashboard_id']) ?></td>
+                <td><?= htmlspecialchars($p['dashboard_id'] ?? '') ?></td>
                 <?php endif; ?>
+                <?php if (!$dashboardApiManaged): ?>
                 <td>
                     <a href="/public/index.php?page=personal&edit=<?= $p['id'] ?>" class="action-btn">Bearbeiten</a>
                     <a href="/public/index.php?page=personal&delete=<?= $p['id'] ?>" class="action-btn delete-btn" onclick="return confirm('Wirklich löschen?')">Löschen</a>
                 </td>
+                <?php endif; ?>
             </tr>
         <?php endforeach; ?>
     </tbody>

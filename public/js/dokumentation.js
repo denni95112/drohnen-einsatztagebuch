@@ -47,6 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.pilot) div.querySelector('.pilot').value = data.pilot;
         if (data.copilot) div.querySelector('.copilot').value = data.copilot;
         if (data.akku) div.querySelector('.akku').value = data.akku;
+        const locSel = div.querySelector('.flugstandort');
+        if (locSel && data.location_id !== undefined) locSel.value = data.location_id;
 
         if (startTime && !isNaN(startTime)) {
             drohnenData[id] = { startzeit: parseInt(startTime), aktiv: true };
@@ -102,14 +104,15 @@ function saveQuickData(element) {
     const $parent = {
         pilot: parent.querySelector('.pilot'),
         copilot: parent.querySelector('.copilot'),
-        akku: parent.querySelector('.akku')
+        akku: parent.querySelector('.akku'),
+        flugstandort: parent.querySelector('.flugstandort')
     };
 
     const pilot = $parent.pilot.value;
     const copilot = $parent.copilot.value;
     const akku = $parent.akku.value;
-
-    const data = { pilot, copilot, akku };
+    const location_id = $parent.flugstandort ? $parent.flugstandort.value : '';
+    const data = { pilot, copilot, akku, location_id };
     localStorage.setItem(`einsatz_${einsatzId}_drohne_${id}`, JSON.stringify(data));
 }
 
@@ -122,13 +125,14 @@ function toggleFlight(img) {
     const $parent = {
         pilot: parent.querySelector('.pilot'),
         copilot: parent.querySelector('.copilot'),
-        akku: parent.querySelector('.akku')
+        akku: parent.querySelector('.akku'),
+        flugstandort: parent.querySelector('.flugstandort')
     };
     
     const pilot = $parent.pilot.value;
     const copilot = $parent.copilot.value;
     const akku = $parent.akku.value;
-    const location_id = 1;
+    const location_id = $parent.flugstandort && $parent.flugstandort.value ? parseInt($parent.flugstandort.value, 10) : null;
 
     let text = "";
     const now = Date.now();
@@ -169,9 +173,9 @@ function toggleFlight(img) {
                 drone_id: id,
                 battery_number: parseInt(akku) || 0,
                 flight_start: new Date(start).toISOString(),
-                flight_end: new Date(now).toISOString(),
-                location_id: location_id
+                flight_end: new Date(now).toISOString()
             };
+            if (location_id != null) data.location_id = location_id;
 
             fetch('/api/v1/flights', {
                 method: 'POST',

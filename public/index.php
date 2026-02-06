@@ -74,14 +74,16 @@ if (!file_exists($viewFile)) {
     die('View file not found');
 }
 
-// Load page-specific data
-$config = include dirname(__DIR__) . '/config/config.php';
+// Load page-specific data (config may not exist during setup)
+$configPath = dirname(__DIR__) . '/config/config.php';
+$config = file_exists($configPath) ? include $configPath : [];
 $isAdmin = AuthService::isAdminAuthenticated();
 
 // Load data for index page
 if ($page === 'index') {
     $einsatzModel = new Einsatz();
     $letzter_einsatz = $einsatzModel->getLastId();
+    $dashboardApiManaged = \App\Services\DashboardApiService::isApiEnabled();
 }
 
 // Include view

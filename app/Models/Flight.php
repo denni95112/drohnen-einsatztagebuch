@@ -5,7 +5,10 @@ use App\Utils\Database;
 use PDO;
 
 /**
- * Flight model (for dashboard integration)
+ * Flight model (for dashboard integration).
+ * Used only when Flug-Dienstbuch is connected via path_to_dashboard_db (direct DB).
+ * When Dashboard API is configured, flights are created via API; this model is not used for inserts.
+ * @deprecated Prefer API integration (DashboardApiService + DashboardIntegrationService::insertFlightViaApi)
  */
 class Flight {
     private $db;

@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Models\Personal;
+use App\Services\DashboardApiService;
 use App\Utils\Validator;
 use App\Middleware\AuthMiddleware;
 
@@ -14,6 +15,12 @@ class PersonalController extends BaseController {
      */
     public function index() {
         AuthMiddleware::handle(true); // Require admin
+        
+        if (DashboardApiService::isApiEnabled()) {
+            $personal = DashboardApiService::getPilots();
+            $this->success($personal);
+            return;
+        }
         
         $model = new Personal();
         $personal = $model->getAllOrdered();
@@ -42,6 +49,11 @@ class PersonalController extends BaseController {
      */
     public function create() {
         AuthMiddleware::handle(true);
+        
+        if (DashboardApiService::isApiEnabled()) {
+            $this->error('Personal wird über das Flug-Dienstbuch verwaltet.', 'API_MANAGED', 403);
+            return;
+        }
         
         if ($this->getMethod() !== 'POST') {
             $this->error('Method not allowed', 'METHOD_NOT_ALLOWED', 405);
@@ -72,6 +84,11 @@ class PersonalController extends BaseController {
      */
     public function update($id) {
         AuthMiddleware::handle(true);
+        
+        if (DashboardApiService::isApiEnabled()) {
+            $this->error('Personal wird über das Flug-Dienstbuch verwaltet.', 'API_MANAGED', 403);
+            return;
+        }
         
         if ($this->getMethod() !== 'PUT' && $this->getMethod() !== 'POST') {
             $this->error('Method not allowed', 'METHOD_NOT_ALLOWED', 405);
@@ -107,6 +124,11 @@ class PersonalController extends BaseController {
      */
     public function delete($id) {
         AuthMiddleware::handle(true);
+        
+        if (DashboardApiService::isApiEnabled()) {
+            $this->error('Personal wird über das Flug-Dienstbuch verwaltet.', 'API_MANAGED', 403);
+            return;
+        }
         
         if ($this->getMethod() !== 'DELETE' && $this->getMethod() !== 'POST') {
             $this->error('Method not allowed', 'METHOD_NOT_ALLOWED', 405);

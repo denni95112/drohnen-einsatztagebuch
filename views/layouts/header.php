@@ -14,28 +14,8 @@ if (!isset($config)) {
     }
 }
 
-// Initialize config option for existing installations
-if (!isset($config['ask_for_install_notification'])) {
-    if (function_exists('updateConfig')) {
-        updateConfig('ask_for_install_notification', true);
-        $config = include dirname(__DIR__, 2) . '/config/config.php';
-    }
-}
-
 $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
 $versionUpdate = checkForNewVersion($currentVersion, $config);
-
-// Check if we should show installation notification dialog
-$showNotificationDialog = false;
-if (isset($config['ask_for_install_notification']) && $config['ask_for_install_notification'] === true) {
-    // Check if auth is loaded (auth.php starts session)
-    if (function_exists('isAdminAuthenticated')) {
-        $isAdmin = isAdminAuthenticated();
-        if ($isAdmin) {
-            $showNotificationDialog = true;
-        }
-    }
-}
 ?>
 <header class="page-header">
     <div class="header-content">
@@ -117,37 +97,3 @@ if (isset($config['ask_for_install_notification']) && $config['ask_for_install_n
     }
 })();
 </script>
-
-<?php if ($showNotificationDialog): ?>
-<!-- Installation Notification Dialog -->
-<div id="install-notification-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <h2>Installationsbenachrichtigung</h2>
-        <p>Möchten Sie den Entwickler über diese Installation informieren?</p>
-        <p><strong>Hinweis:</strong> Es werden keine privaten Daten übertragen. Es wird nur eine Benachrichtigung mit dem aktuellen Datum und der Uhrzeit gesendet. Optional können Sie den Namen Ihrer Organisation teilen, wenn Sie dies wünschen.</p>
-        <div id="install-notification-form" style="margin: 1.5rem 0;">
-            <div style="margin-bottom: 1rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                    <input type="checkbox" id="install-notification-share-org" style="cursor: pointer;">
-                    <span>Ich möchte den Namen meiner Organisation teilen</span>
-                </label>
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label for="install-notification-organization" style="display: block; margin-bottom: 0.5rem;">Organisation (optional):</label>
-                <input type="text" id="install-notification-organization" placeholder="Name Ihrer Organisation" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" disabled>
-            </div>
-        </div>
-        <div id="install-notification-message-container"></div>
-        <div class="modal-buttons">
-            <button type="button" id="install-notification-yes" class="modal-button">Ja</button>
-            <button type="button" id="install-notification-no" class="modal-button modal-button-no">Nein</button>
-        </div>
-    </div>
-</div>
-<meta name="csrf-token" content="<?php echo htmlspecialchars(getCSRFToken(), ENT_QUOTES, 'UTF-8'); ?>">
-<script>
-    // Make config value available to JavaScript
-    window.showInstallNotification = true;
-</script>
-            <script src="<?= $basePath ? $basePath . 'public/js/install_notification.js' : getVersionedAsset('js/install_notification.js') ?>"></script>
-<?php endif; ?>

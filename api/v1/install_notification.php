@@ -67,7 +67,13 @@ if (isset($_POST['action'])) {
     $action = $_POST['action'];
     
     if ($action === 'send') {
-        // Send notification to IFTTT webhook
+        // Send anonymous install tracking to open-drone-tools.de (repo + version only)
+        require_once dirname(__DIR__, 2) . '/utils.php';
+        if (function_exists('sendInstallTrackingWebhook')) {
+            sendInstallTrackingWebhook(GITHUB_REPO_NAME, (string) APP_VERSION);
+        }
+
+        // Send notification to IFTTT webhook (optional)
         // REPLACE THIS URL WITH YOUR IFTTT WEBHOOK URL
         $webhookUrl = 'https://maker.ifttt.com/trigger/Git_Repo_Install/json/with/key/NQCJaGe5GqJFuId-QeW4T7rWCnPf2B8JqJsn_xJtUX';
         

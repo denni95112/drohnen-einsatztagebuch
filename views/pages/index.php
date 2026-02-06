@@ -20,10 +20,13 @@
         <a href="<?= htmlspecialchars($config['dashboard_url']) ?>" class="btn-dashboard">Dashboard öffnen</a>
     <?php endif; ?>
     <?php if ($isAdmin): ?>
+        <?php if (!empty($dashboardApiManaged)): ?>
+        <a href="/public/index.php?page=drohnen" class="btn">Drohnen anzeigen</a>
+        <a href="/public/index.php?page=personal" class="btn">Personal anzeigen</a>
+        <?php else: ?>
         <a href="/public/index.php?page=drohnen" class="btn">Drohnenverwaltung</a>
-    <?php endif; ?>
-    <?php if ($isAdmin): ?>
         <a href="/public/index.php?page=personal" class="btn">Personalverwaltung</a>
+        <?php endif; ?>
     <?php endif; ?>
     <a href="/public/index.php?page=neuer_einsatz" class="btn">Neuen Einsatz starten</a>
 

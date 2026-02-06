@@ -16,6 +16,7 @@
     }
     ?>
     <p>Version <?php echo defined('APP_VERSION') ? APP_VERSION : '1.0.0'; ?> - <a href="<?php echo htmlspecialchars($changelogUrl); ?>">Changelog</a> - <a href="<?php echo htmlspecialchars($aboutUrl); ?>">Über</a></p>
+    <p><a href="https://open-drone-tools.de/">open-drone-tools.de</a></p>
     <p><a href="https://github.com/denni95112/drohnen-einsatztagebuch">GitHub</a></p>
     <?php 
     $buyMeACoffeePath = dirname(__DIR__, 2) . '/includes/buy_me_a_coffee.php';

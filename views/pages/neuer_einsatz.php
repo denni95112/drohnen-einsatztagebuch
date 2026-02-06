@@ -5,12 +5,14 @@
 require_once dirname(__DIR__, 2) . '/bootstrap.php';
 
 use App\Services\AuthService;
+use App\Services\DashboardApiService;
 use App\Models\Personal;
 use App\Utils\Validator;
 
 AuthService::requireAuth();
 
 $config = include dirname(__DIR__, 2) . '/config/config.php';
+$dashboardApiManaged = DashboardApiService::isApiEnabled();
 
 if (isset($_POST['einsatz_starten'])) {
     $einsatznummer = !empty($_POST['einsatznummer']) ? trim($_POST['einsatznummer']) : date('Ymd');
@@ -62,6 +64,20 @@ if (isset($_POST['einsatz_starten'])) {
 }
 
 $personalModel = new Personal();
+if ($dashboardApiManaged) {
+    // Sync API pilots to local personal so we have local IDs for gruppenfuehrer_id / dokumentierende_id / einsatz_personal
+    $apiPilots = DashboardApiService::getPilots();
+    foreach ($apiPilots as $p) {
+        $existing = $personalModel->findByDashboardId($p['dashboard_id']);
+        if (!$existing) {
+            $personalModel->create([
+                'vorname' => $p['vorname'],
+                'nachname' => $p['nachname'],
+                'dashboard_id' => $p['dashboard_id'],
+            ]);
+        }
+    }
+}
 $personal = $personalModel->getAllOrdered();
 $einsatzarten = ["Brandeinsatz", "Ölspur", "Öl auf Gewässer", "Personensuche", "Erkundung", "sonst. TH", "Übung"];
 ?>
