@@ -7,7 +7,7 @@
 $changelog = [
     [
         'version' => '1.1.0',
-        'date' => '2026-02-XX',
+        'date' => '2026-02-08',
         'changes' => [
             'Vollständige Code-Umstrukturierung mit MVC-Pattern',
             'RESTful API-Architektur implementiert',
@@ -27,6 +27,7 @@ $changelog = [
 
         ],
         'new_features' => [
+            'Drohnen Mission Mapper-Beta jetzt verfügbar',
             'RESTful API für alle Funktionen',
             'Moderne MVC-Architektur',
             'Service-Layer für Business-Logik',
