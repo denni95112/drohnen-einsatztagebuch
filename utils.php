@@ -37,7 +37,73 @@ function getVersionedAsset($path) {
     }
     
     $separator = strpos($path, '?') !== false ? '&' : '?';
+    // Use /public/ so assets work with both Apache (.htaccess) and PHP built-in server (project root)
+    $path = '/public/' . ltrim($path, '/');
     return $path . $separator . 'v=' . urlencode($version);
+}
+
+/**
+ * Get current request base URL (scheme + host, no path).
+ * Used for absolute URLs (e.g. QR code) so no config 'domain' is needed.
+ *
+ * @return string e.g. "http://localhost:8001"
+ */
+function getBaseUrl() {
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+        || (!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] === 'https');
+    $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+    return ($https ? 'https' : 'http') . '://' . $host;
+}
+
+/**
+ * Get URL for the logo image (served via logo.php so it works with any document root).
+ *
+ * @return string URL to the logo script, or empty string if no logo
+ */
+function getLogoUrl() {
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    // Use /public/ so logo works from main app and from updater (project root doc)
+    $base = (strpos($scriptName, '/public/') !== false || strpos($scriptName, '/updater/') !== false) ? '/public' : '';
+    return $base . '/logo.php';
+}
+
+/**
+ * Write config array to config file (used when updating multiple keys at once to avoid read cache issues).
+ * @param array $config Full config array to write
+ * @return bool Success status
+ */
+function writeConfig(array $config) {
+    $configFile = __DIR__ . '/config/config.php';
+    $content = "<?php\nreturn [\n";
+    foreach ($config as $k => $v) {
+        if (is_array($v)) {
+            $content .= "    '{$k}' => [\n";
+            foreach ($v as $subKey => $subValue) {
+                $subValueEscaped = addslashes($subValue);
+                $content .= "        '{$subKey}' => '{$subValueEscaped}',\n";
+            }
+            $content .= "    ],\n";
+        } elseif (is_bool($v)) {
+            $content .= "    '{$k}' => " . ($v ? 'true' : 'false') . ",\n";
+        } elseif (is_numeric($v) && !is_string($v)) {
+            $content .= "    '{$k}' => {$v},\n";
+        } else {
+            $vEscaped = addslashes((string) $v);
+            $content .= "    '{$k}' => '{$vEscaped}',\n";
+        }
+    }
+    $content .= "];\n";
+    $backupFile = $configFile . '.backup.' . time();
+    @copy($configFile, $backupFile);
+    $result = file_put_contents($configFile, $content) !== false;
+    if ($result) {
+        @unlink($backupFile);
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($configFile, true);
+        }
+    }
+    return $result;
 }
 
 /**
@@ -96,4 +162,45 @@ function updateConfig($key, $value) {
     }
     
     return $result;
+}
+
+/**
+ * Send install/update tracking webhook to open-drone-tools.de.
+ * Fire-and-forget: does not throw or block on failure.
+ *
+ * @param string $repo Repository name (e.g. GITHUB_REPO_NAME)
+ * @param string $version Version string (e.g. APP_VERSION or update version)
+ */
+function sendInstallTrackingWebhook(string $repo, string $version): void {
+    $url = 'https://open-drone-tools.de/webhook.php';
+    $payload = json_encode([
+        'repo' => trim($repo),
+        'version' => trim($version),
+    ]);
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        @curl_exec($ch);
+        @curl_close($ch);
+    } elseif (ini_get('allow_url_fopen')) {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/json\r\n",
+                'content' => $payload,
+                'timeout' => 5,
+            ],
+        ]);
+        @file_get_contents($url, false, $context);
+    }
 }

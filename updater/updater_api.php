@@ -161,6 +161,10 @@ try {
             }
             
             if ($result['success']) {
+                // Notify install tracking webhook (fire-and-forget)
+                require_once __DIR__ . '/../includes/version.php';
+                require_once __DIR__ . '/../utils.php';
+                sendInstallTrackingWebhook(GITHUB_REPO_NAME, $version);
                 echo json_encode([
                     'success' => true,
                     'message' => $result['message'],

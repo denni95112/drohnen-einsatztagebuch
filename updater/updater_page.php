@@ -15,8 +15,8 @@ require_once $baseDir . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR .
 require_once $baseDir . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'version.php';
 require_once $baseDir . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'csrf.php';
 
-// Calculate base path for assets
-$basePath = '../';
+// Calculate base path for assets (CSS/JS in public/ so it works with any document root)
+$basePath = '../public/';
 
 // Load updater class
 require_once __DIR__ . '/updater.php';
@@ -55,7 +55,7 @@ try {
     <link rel="manifest" href="<?php echo $basePath; ?>manifest.json">
 </head>
 <body>
-    <?php include $baseDir . DIRECTORY_SEPARATOR . 'header.php'; ?>
+    <?php include $baseDir . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'header.php'; ?>
     <main>
         <h1>Update Tool</h1>
         
@@ -157,17 +157,16 @@ try {
         
         <!-- Back Button -->
         <div style="margin-top: 2rem; text-align: center;">
-            <a href="<?php echo $basePath; ?>admin.php" class="btn-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; transition: all 0.3s ease;">
+            <a href="/public/index.php?page=admin" class="btn-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; transition: all 0.3s ease;">
                 ← Zurück zur Administration
             </a>
         </div>
     </main>
     
-    <?php include $baseDir . DIRECTORY_SEPARATOR . 'footer.php'; ?>
+    <?php include $baseDir . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'footer.php'; ?>
     
     <?php
-    // Calculate base path for assets
-    $basePath = '../';
+    // basePath already set at top for assets
     ?>
     <script>
         // Make config available to JavaScript

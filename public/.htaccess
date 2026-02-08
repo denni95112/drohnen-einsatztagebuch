@@ -1,0 +1,8 @@
+# Public directory .htaccess
+# Allow direct access to files in public directory
+
+# Deny access to hidden files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

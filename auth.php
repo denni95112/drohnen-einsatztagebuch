@@ -1,5 +1,20 @@
 <?php
-session_start();
+/**
+ * Authentication functions
+ * Updated to use AuthService while maintaining backward compatibility
+ */
+
+// Load autoloader if not already loaded
+if (!class_exists('App\Services\AuthService')) {
+    require_once __DIR__ . '/app/autoload.php';
+}
+
+// Start session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+use App\Services\AuthService;
 
 /**
  * Load config once and cache it
@@ -30,21 +45,7 @@ function getConfig() {
  * @return bool True if authenticated, false otherwise
  */
 function isAuthenticated() {
-    $config = getConfig();
-
-    if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-        return true;
-    }
-
-    if (isset($_COOKIE[$config['token_name']])) {
-        if (hash('sha256', getPasswortFromCookie()) === $config['password_hash']) {
-            $_SESSION['loggedin'] = true;
-            return true;
-        }else{
-            $_SESSION['loggedin'] = false;
-        }
-    }
-    return false;
+    return AuthService::isAuthenticated();
 }
 
 /**
@@ -53,21 +54,7 @@ function isAuthenticated() {
  * @return bool True if admin authenticated, false otherwise
  */
 function isAdminAuthenticated() {
-    $config = getConfig();
-
-    if (isset($_SESSION['adminloggedin']) && $_SESSION['adminloggedin'] === true) {
-        return true;
-    }
-
-    if (isset($_COOKIE[$config['token_name']])) {
-        if (hash('sha256', getPasswortFromCookie()) === $config['admin_password_hash']) {
-            $_SESSION['adminloggedin'] = true;
-            return true;
-        }else{
-            $_SESSION['adminloggedin'] = false;
-        }
-    }
-    return false;
+    return AuthService::isAdminAuthenticated();
 }
 
 /**
@@ -76,10 +63,7 @@ function isAdminAuthenticated() {
  * @return void
  */
 function requireAuth() {
-    if (!isAuthenticated()) {
-        header('Location: login.php');
-        exit();
-    }
+    AuthService::requireAuth();
 }
 
 /**
@@ -88,10 +72,7 @@ function requireAuth() {
  * @return void
  */
 function requireAdminAuth() {
-    if (!isAdminAuthenticated()) {
-        header('Location: index.php');
-        exit();
-    }
+    AuthService::requireAdminAuth();
 }
 
 /**
@@ -101,9 +82,7 @@ function requireAdminAuth() {
  * @return void
  */
 function setLoginCookie($password) {
-    $config = getConfig();
-    $cookie_value = base64_encode($password);
-    setcookie($config['token_name'], $cookie_value, time() + (30 * 24 * 60 * 60), "/");
+    AuthService::setLoginCookie($password);
 }
 
 /**
@@ -126,8 +105,5 @@ function getPasswortFromCookie() {
  * @return void
  */
 function logout() {
-    $config = getConfig();
-    setcookie($config['token_name'], '', time() - 3600, "/");
-    session_destroy();
+    AuthService::logout();
 }
-?>
