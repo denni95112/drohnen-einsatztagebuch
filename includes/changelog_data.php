@@ -6,6 +6,17 @@
 
 $changelog = [
     [
+        'version' => '1.1.1',
+        'date' => '2026-02-11',
+        'changes' => [
+        ],
+        'bugfixes' => [
+            'Piloten mit ungültigen Lizenzen können nicht mehr als Drohnenpilot ausgewählt werden. (Co-Pilot weiterhin möglich)',
+        ],
+        'new_features' => [
+        ]
+    ],
+    [
         'version' => '1.1.0',
         'date' => '2026-02-08',
         'changes' => [

@@ -37,6 +37,7 @@ class DashboardApiService {
                 'vorname' => $vorname,
                 'nachname' => $nachname,
                 'dashboard_id' => (int) $p['id'],
+                'is_locked_license' => !empty($p['is_locked_license']),
             ];
         }
         usort($list, function ($a, $b) {

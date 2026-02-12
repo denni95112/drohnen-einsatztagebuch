@@ -116,13 +116,19 @@ $anwesendMap = array_flip($personal_anwesend_ids);
     <h3>Quick Actions</h3>
     <?php 
     $personalForDropdown = $dashboardApiManaged ? $personal_gesamt : $personal;
-    $personalOptions = '';
+    $personalOptionsCopilot = '';
+    $personalOptionsPilot = '';
     foreach ($personalForDropdown as $p) {
         $name = htmlspecialchars(($p['vorname'] ?? '') . ' ' . ($p['nachname'] ?? ''));
         if (trim($name) === '') {
             $name = htmlspecialchars($p['name'] ?? '');
         }
-        $personalOptions .= "<option value=\"{$name}\">{$name}</option>\n            ";
+        $opt = "<option value=\"{$name}\">{$name}</option>\n            ";
+        $personalOptionsCopilot .= $opt;
+        // Pilot dropdown: exclude locked pilots when using dashboard API (co-pilot may be locked)
+        if (!$dashboardApiManaged || empty($p['is_locked_license'])) {
+            $personalOptionsPilot .= $opt;
+        }
     }
     ?>
     <?php foreach ($drohnen as $drohne): ?>
@@ -131,12 +137,12 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 
         Pilot:<br>
         <select class="pilot" onchange="saveQuickData(this)">
-            <?= $personalOptions ?>
+            <?= $personalOptionsPilot ?>
         </select><br>
 
         Co-Pilot:<br>
         <select class="copilot" onchange="saveQuickData(this)">
-            <?= $personalOptions ?>
+            <?= $personalOptionsCopilot ?>
         </select><br>
 
         <?php if (!empty($locations)): ?>
