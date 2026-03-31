@@ -18,7 +18,8 @@ lib/phpqrcode/
 *.log
 *.cache
 composer.phar
-vendor/
+# Nur Composer-Abhängigkeiten im Projektroot (nicht public/vendor/ mit Leaflet o. Ä.)
+/vendor/
 
 # IDE
 .idea/

@@ -18,6 +18,34 @@ function is_absolute_path($path) {
 }
 
 /**
+ * Web path to a file under public/ (css, js, vendor, img, …).
+ * Uses dirname(SCRIPT_NAME) so assets work when the app lives in a subdirectory
+ * (e.g. https://example.org/myorg/public/index.php → …/public/vendor/leaflet/…).
+ * When the document root is the public/ folder, SCRIPT_NAME is often /index.php
+ * and paths become /css/… (no /public/ prefix).
+ *
+ * @param string $path Relative path inside public/ (e.g. 'css/styles.css')
+ * @return string URL path starting with /
+ */
+function getPublicAssetUrlPath($path) {
+    $path = ltrim((string) $path, '/');
+    if (strpos($path, 'public/') === 0) {
+        $path = substr($path, 7);
+    }
+    $scriptName = isset($_SERVER['SCRIPT_NAME']) ? str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']) : '/index.php';
+    $dir = dirname($scriptName);
+    if ($dir === '/' || $dir === '\\' || $dir === '.') {
+        $urlPath = '/' . $path;
+    } else {
+        $urlPath = rtrim($dir, '/') . '/' . $path;
+    }
+    if ($urlPath === '' || $urlPath[0] !== '/') {
+        $urlPath = '/' . ltrim($urlPath, '/');
+    }
+    return $urlPath;
+}
+
+/**
  * Get versioned asset URL (for cache busting)
  * 
  * @param string $path Relative path to the asset (e.g., 'css/styles.css')
@@ -36,10 +64,9 @@ function getVersionedAsset($path) {
         $version = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
     }
     
-    $separator = strpos($path, '?') !== false ? '&' : '?';
-    // Use /public/ so assets work with both Apache (.htaccess) and PHP built-in server (project root)
-    $path = '/public/' . ltrim($path, '/');
-    return $path . $separator . 'v=' . urlencode($version);
+    $glue = (strpos($path, '?') !== false) ? '&' : '?';
+    $urlPath = getPublicAssetUrlPath($path);
+    return $urlPath . $glue . 'v=' . urlencode($version);
 }
 
 /**
@@ -62,10 +89,7 @@ function getBaseUrl() {
  * @return string URL to the logo script, or empty string if no logo
  */
 function getLogoUrl() {
-    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-    // Use /public/ so logo works from main app and from updater (project root doc)
-    $base = (strpos($scriptName, '/public/') !== false || strpos($scriptName, '/updater/') !== false) ? '/public' : '';
-    return $base . '/logo.php';
+    return getPublicAssetUrlPath('logo.php');
 }
 
 /**
