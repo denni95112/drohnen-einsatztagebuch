@@ -1,0 +1,208 @@
+/* Neuer Einsatz: map modal + Flugstandort checkbox */
+.map-picker-btn {
+    margin-top: 0.35rem;
+}
+
+.checkbox-flugstandort {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.checkbox-flugstandort input {
+    margin-top: 0.25rem;
+}
+
+.map-modal[hidden] {
+    display: none !important;
+}
+
+.map-modal:not([hidden]) {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.map-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.map-modal-panel {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    max-width: 640px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: auto;
+    padding: 1rem 1.25rem 1.25rem;
+}
+
+.map-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.map-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #1e3c72;
+    border: none;
+    padding: 0;
+}
+
+.map-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0 0.25rem;
+}
+
+.map-modal-close:hover {
+    color: #1e293b;
+}
+
+.map-modal-hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.map-search-row {
+    margin-bottom: 0.75rem;
+}
+
+.map-search-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+.map-search-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.map-search-input {
+    flex: 1 1 160px;
+    min-width: 0;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.map-search-msg {
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.map-search-msg.map-search-msg-error {
+    color: #b91c1c;
+}
+
+.map-search-results {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    max-height: 10rem;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.map-search-results li {
+    margin: 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.map-search-results li:last-child {
+    border-bottom: none;
+}
+
+.map-search-results button {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.65rem;
+    border: none;
+    background: transparent;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    color: #1e293b;
+    cursor: pointer;
+}
+
+.map-search-results button:hover,
+.map-search-results button:focus {
+    background: #e0f2fe;
+    outline: none;
+}
+
+.map-picker-container {
+    height: 320px;
+    min-height: 240px;
+    width: 100%;
+    min-width: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    position: relative;
+    z-index: 0;
+}
+
+.map-picker-container .map-load-error {
+    margin: 0;
+    padding: 1rem;
+    color: #b91c1c;
+    font-size: 0.95rem;
+}
+
+.map-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+}
+
+.map-modal-cancel-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.map-modal-cancel-btn:hover {
+    background: #f1f5f9;
+}
+
+@media (max-width: 600px) {
+    .map-picker-container {
+        height: 240px;
+    }
+}

@@ -1,6 +1,9 @@
 <?php
 namespace App\Services;
 
+use App\Models\Personal;
+use App\Utils\HttpTransport;
+
 /**
  * Service for Flug-Dienstbuch API integration.
  * Fetches pilots, drones, locations and (later) creates flights via API.
@@ -48,6 +51,26 @@ class DashboardApiService {
     }
 
     /**
+     * Fetch pilots from the API and insert any missing rows into local `personal`
+     * so gruppenfuehrer_id / dokumentierende_id / einsatz_personal resolve correctly.
+     */
+    public static function syncPilotsToLocalPersonal(Personal $personalModel): void {
+        if (!self::isApiEnabled()) {
+            return;
+        }
+        foreach (self::getPilots() as $p) {
+            $existing = $personalModel->findByDashboardId($p['dashboard_id']);
+            if (!$existing) {
+                $personalModel->create([
+                    'vorname' => $p['vorname'],
+                    'nachname' => $p['nachname'],
+                    'dashboard_id' => $p['dashboard_id'],
+                ]);
+            }
+        }
+    }
+
+    /**
      * Get drones from Flug-Dienstbuch API.
      * Returns array of items with keys: id, name (compatible with Drohne list)
      */
@@ -70,11 +93,48 @@ class DashboardApiService {
     }
 
     /**
+     * Create a flight location in Flug-Dienstbuch (POST /api/locations.php?action=create).
+     * Token auth skips CSRF. Uses request_id for idempotent retries.
+     *
+     * @return array{success: bool, data?: array, error?: string|null, http_code: int}
+     */
+    public static function createLocation(
+        string $locationName,
+        float $latitude,
+        float $longitude,
+        ?string $description = null,
+        bool $training = false,
+        ?string $requestId = null
+    ): array {
+        if (!self::isApiEnabled()) {
+            return ['success' => false, 'error' => 'API not configured', 'data' => [], 'http_code' => 0];
+        }
+        $name = trim($locationName);
+        if ($name === '') {
+            return ['success' => false, 'error' => 'location_name required', 'data' => [], 'http_code' => 0];
+        }
+        if (strlen($name) > 500) {
+            $name = substr($name, 0, 500);
+        }
+        $payload = [
+            'location_name' => $name,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'training' => $training,
+            'request_id' => $requestId ?? ('einsatz_' . bin2hex(random_bytes(8))),
+        ];
+        if ($description !== null && trim($description) !== '') {
+            $payload['description'] = trim($description);
+        }
+        return self::makeApiRequest('/api/locations.php?action=create', 'POST', $payload);
+    }
+
+    /**
      * Get flight locations from Flug-Dienstbuch API.
      * Returns array of items with at least: id, location_name
      */
     public static function getLocations(): array {
-        $response = self::makeApiRequest('/api/locations.php?action=list', 'GET');
+        $response = self::makeApiRequest('/api/locations.php?action=list&max_age_days=7', 'GET');
         if (!$response['success'] || empty($response['data']['locations'])) {
             return [];
         }
@@ -96,28 +156,22 @@ class DashboardApiService {
         }
         $baseUrl = rtrim($config['url'], '/');
         $url = $baseUrl . (strpos($endpoint, '/') === 0 ? $endpoint : '/' . $endpoint);
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        $insecure = HttpTransport::isLocalDevUrl($url);
+        $headers = [
             'Authorization: Bearer ' . $config['token'],
-            'Content-Type: application/json',
-        ]);
+            'Accept: application/json',
+        ];
         if ($method === 'POST') {
-            curl_setopt($ch, CURLOPT_POST, true);
-            if ($data !== null) {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-            }
+            $headers[] = 'Content-Type: application/json';
         }
-        $response = curl_exec($ch);
-        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
+        $body = ($method === 'POST' && $data !== null) ? json_encode($data) : null;
+        $result = HttpTransport::request($url, $method, $headers, $body, 15, $insecure);
+        $response = $result['body'];
+        $httpCode = $result['http_code'];
         if ($response === false) {
             return [
                 'success' => false,
-                'error' => $curlError ?: 'Request failed',
+                'error' => $result['error'] ?: 'Request failed',
                 'data' => [],
                 'http_code' => $httpCode,
             ];

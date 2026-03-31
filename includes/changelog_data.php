@@ -6,6 +6,24 @@
 
 $changelog = [
     [
+        'version' => '1.1.2',
+        'date' => '2026-03-31',
+        'changes' => [
+            'Flug-Dienstbuch-API: Flugstandorte werden nur noch aus den letzten 7 Tagen geladen (passend zum Flug-Dienstbuch)',
+            'HTTP-Zugriff auf die Dashboard-API über PHP-Streams, falls cURL nicht installiert ist (z. B. „Verbindung testen“ und alle API-Aufrufe)',
+            'Content-Security-Policy: Leaflet (Karte) lokal ausgeliefert; Nominatim für Geocoding in connect-src erlaubt',
+        ],
+        'bugfixes' => [
+            'Admin: „Verbindung testen“ führt nicht mehr zu HTTP 500, wenn die Datenbank nicht erreichbar ist (Test läuft vor DB-Verbindung)',
+            'Admin: API-Test funktioniert ohne php-curl, sofern allow_url_fopen aktiv ist',
+        ],
+        'new_features' => [
+            'Bei aktivierter Dashboard-API: Personal wird bei jedem Start eines neuen Einsatzes (Formular und REST-API) mit dem Flug-Dienstbuch abgeglichen',
+            'Neuer Einsatz: optional „Als Flugstandort im Flug-Dienstbuch anlegen“ (Koordinaten + Adresse per API)',
+            'Neuer Einsatz: Karte im Dialog (Leaflet), Ortssuche per Adresse/Stadt (Nominatim), Alternative wenn GPS ausfällt',
+        ]
+    ],
+    [
         'version' => '1.1.1',
         'date' => '2026-02-11',
         'changes' => [

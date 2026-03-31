@@ -2,6 +2,8 @@
 namespace App\Controllers;
 
 use App\Models\Einsatz;
+use App\Models\Personal;
+use App\Services\DashboardApiService;
 use App\Services\PDFService;
 use App\Utils\Validator;
 use App\Middleware\AuthMiddleware;
@@ -48,6 +50,10 @@ class EinsatzController extends BaseController {
         
         if ($this->getMethod() !== 'POST') {
             $this->error('Method not allowed', 'METHOD_NOT_ALLOWED', 405);
+        }
+
+        if (DashboardApiService::isApiEnabled()) {
+            DashboardApiService::syncPilotsToLocalPersonal(new Personal());
         }
         
         $data = $this->getRequestData();

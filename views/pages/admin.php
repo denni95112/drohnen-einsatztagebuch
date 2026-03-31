@@ -6,52 +6,64 @@ require_once dirname(__DIR__, 2) . '/bootstrap.php';
 
 use App\Services\AuthService;
 use App\Utils\Database;
+use App\Utils\HttpTransport;
 
 AuthService::requireAdminAuth();
 
 $config = include dirname(__DIR__, 2) . '/config/config.php';
-$db = Database::getInstance()->getConnection();
 
-// AJAX: Test Dashboard API connection (before any output)
+// AJAX: Test Dashboard API (before DB — avoids 500 if SQLite fails; test does not need DB)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === 'test_dashboard_api') {
     header('Content-Type: application/json; charset=utf-8');
-    $url = trim($_POST['dashboard_api_url'] ?? '');
-    $token = trim($_POST['dashboard_api_token'] ?? '');
-    if ($url === '') {
-        echo json_encode(['success' => false, 'error' => 'Bitte API-URL eingeben.']);
+    try {
+        $url = trim($_POST['dashboard_api_url'] ?? '');
+        $token = trim($_POST['dashboard_api_token'] ?? '');
+        if ($url === '') {
+            echo json_encode(['success' => false, 'error' => 'Bitte API-URL eingeben.']);
+            exit;
+        }
+        if ($token === '') {
+            $token = trim($config['dashboard_api_token'] ?? '');
+        }
+        if ($token === '') {
+            echo json_encode(['success' => false, 'error' => 'Bitte API-Token eingeben oder zuerst speichern.']);
+            exit;
+        }
+        $baseUrl = rtrim(preg_replace('#/+$#', '', $url), '/');
+        $testUrl = $baseUrl . '/api/pilots.php?action=list';
+        $insecure = HttpTransport::isLocalDevUrl($baseUrl);
+        $req = HttpTransport::request(
+            $testUrl,
+            'GET',
+            [
+                'Authorization: Bearer ' . $token,
+                'Accept: application/json',
+            ],
+            null,
+            10,
+            $insecure
+        );
+        $response = $req['body'];
+        $httpCode = $req['http_code'];
+        if ($response === false) {
+            echo json_encode(['success' => false, 'error' => 'Verbindung fehlgeschlagen: ' . ($req['error'] ?: 'Unbekannter Fehler')]);
+            exit;
+        }
+        $data = json_decode($response, true);
+        if ($httpCode === 200 && isset($data['success']) && $data['success'] === true) {
+            echo json_encode(['success' => true, 'message' => 'Verbindung erfolgreich.']);
+            exit;
+        }
+        $errMsg = is_array($data) && isset($data['error']) ? $data['error'] : ('HTTP ' . $httpCode);
+        echo json_encode(['success' => false, 'error' => $errMsg]);
+        exit;
+    } catch (\Throwable $e) {
+        echo json_encode(['success' => false, 'error' => 'Serverfehler: ' . $e->getMessage()]);
         exit;
     }
-    if ($token === '') {
-        $token = trim($config['dashboard_api_token'] ?? '');
-    }
-    if ($token === '') {
-        echo json_encode(['success' => false, 'error' => 'Bitte API-Token eingeben oder zuerst speichern.']);
-        exit;
-    }
-    $baseUrl = rtrim(preg_replace('#/+$#', '', $url), '/');
-    $testUrl = $baseUrl . '/api/pilots.php?action=list';
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $testUrl);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token]);
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlError = curl_error($ch);
-    curl_close($ch);
-    if ($response === false) {
-        echo json_encode(['success' => false, 'error' => 'Verbindung fehlgeschlagen: ' . $curlError]);
-        exit;
-    }
-    $data = json_decode($response, true);
-    if ($httpCode === 200 && isset($data['success']) && $data['success'] === true) {
-        echo json_encode(['success' => true, 'message' => 'Verbindung erfolgreich.']);
-        exit;
-    }
-    $errMsg = isset($data['error']) ? $data['error'] : ('HTTP ' . $httpCode);
-    echo json_encode(['success' => false, 'error' => $errMsg]);
-    exit;
 }
+
+$db = Database::getInstance()->getConnection();
 
 // Library installation functions (reused from setup.php logic)
 if (!function_exists('getAllLibraries')) {
@@ -832,14 +844,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                return r.text().then(function(text) {
+                    var data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(text ? text.replace(/<[^>]+>/g, ' ').trim().slice(0, 300) : ('HTTP ' + r.status));
+                    }
+                    if (!r.ok && data && !data.error) {
+                        data = { success: false, error: 'HTTP ' + r.status };
+                    }
+                    return data;
+                });
+            })
             .then(function(data) {
                 dashboardApiStatus.className = 'dashboard-api-status ' + (data.success ? 'dashboard-api-status-ok' : 'dashboard-api-status-error');
                 dashboardApiStatus.textContent = data.success ? (data.message || 'Verbindung erfolgreich.') : (data.error || 'Fehler');
             })
-            .catch(function() {
+            .catch(function(err) {
                 dashboardApiStatus.className = 'dashboard-api-status dashboard-api-status-error';
-                dashboardApiStatus.textContent = 'Netzwerkfehler.';
+                dashboardApiStatus.textContent = err && err.message ? err.message : 'Netzwerkfehler.';
             });
         });
     }

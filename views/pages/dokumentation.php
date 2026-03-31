@@ -81,6 +81,14 @@ $anwesendMap = array_flip($personal_anwesend_ids);
 <?php include dirname(__DIR__) . '/layouts/header.php'; ?>
 <h2>Einsatz-Dokumentation (#<?= htmlspecialchars($einsatz['einsatznummer']) ?>)</h2>
 
+<?php if (isset($_GET['standort_api'])): ?>
+    <?php if ($_GET['standort_api'] === '1'): ?>
+        <p class="notice-success" role="status">Flugstandort wurde im Flug-Dienstbuch angelegt.</p>
+    <?php else: ?>
+        <p class="notice-warning" role="alert">Flugstandort konnte im Flug-Dienstbuch nicht angelegt werden. Bitte dort manuell prüfen.</p>
+    <?php endif; ?>
+<?php endif; ?>
+
 <?php if (!$einsatz_abgeschlossen): ?>
 
     <div class="accordion-tabs-container">
