@@ -6,6 +6,18 @@
 
 $changelog = [
     [
+        'version' => '1.1.3',
+        'date' => '2026-04-01',
+        'changes' => [
+            'Statische Assets (CSS, JS, Leaflet, Logo): URL-Pfad wird aus dem Skript-Pfad ermittelt (`getPublicAssetUrlPath`) – funktioniert auch, wenn die Anwendung in einem Unterverzeichnis liegt (nicht mehr fester Pfad `/public/…` von der Domainwurzel)',
+            '`.gitignore`: nur noch `/vendor/` im Projektroot (Composer); `public/vendor/leaflet/` wird versioniert und beim Deploy mit ausgeliefert (behebt 404 für Leaflet auf dem Server)',
+        ],
+        'bugfixes' => [
+        ],
+        'new_features' => [
+        ]
+    ],
+    [
         'version' => '1.1.2',
         'date' => '2026-03-31',
         'changes' => [
